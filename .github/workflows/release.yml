@@ -1,6 +1,9 @@
 name: Release
+# Run manually (Actions → Release → Run workflow) with a tag like v0.2.0 to build and publish installers from CI.
 on:
-  push: { tags: ['v*'] }
+  workflow_dispatch:
+    inputs:
+      tag: { description: 'Release tag, e.g. v0.2.0', required: true }
 permissions:
   contents: write
 jobs:
@@ -13,4 +16,4 @@ jobs:
         run: scripts/package.sh
       - name: Publish release
         env: { GH_TOKEN: '${{ github.token }}' }
-        run: gh release create "$GITHUB_REF_NAME" dist/Offerlane-*.dmg dist/Offerlane-*.pkg dist/SHA256SUMS.txt --title "Offerlane $GITHUB_REF_NAME" --generate-notes
+        run: gh release create "${{ inputs.tag }}" dist/Offerlane-*.dmg dist/Offerlane-*.pkg dist/SHA256SUMS.txt --title "Offerlane ${{ inputs.tag }}" --generate-notes
