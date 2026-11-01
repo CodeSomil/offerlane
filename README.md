@@ -43,12 +43,12 @@ Nothing is tailored, applied for or created without your say-so. Offerlane never
 | 1. Sign in | 2. Connect an AI | 3. Add your résumé | 4. Find jobs |
 |---|---|---|---|
 | <img src="docs/screenshots/welcome-light.png" width="200" alt="Welcome screen"> | <img src="docs/screenshots/1-ai-light.png" width="200" alt="Choose your AI"> | <img src="docs/screenshots/2-resumes-light.png" width="200" alt="Add resumes"> | <img src="docs/screenshots/3-ready-light.png" width="200" alt="Ready to find jobs"> |
-| Email and password, or Continue with Google; Touch ID optional | Claude account, Claude API key, or free local Ollama | PDF, Word, text or LaTeX; several versions welcome | Titles and companies are drafted from your résumé; change anything later |
+| Email and password; Touch ID optional (Continue with Google is coming) | Claude account, Claude API key, or free local Ollama | PDF, Word, text or LaTeX; several versions welcome | Titles and companies are drafted from your résumé; change anything later |
 
 ## What's new in 0.2.0
 - **A fresh design**: calmer layout, full dark mode, faster screens, and a short tour on first launch.
 - **Profiles that stay signed in**:
-  - email and password, or Continue with Google, with optional Touch ID;
+  - email and password, with optional Touch ID (Continue with Google is built in and will be switched on in a later release);
   - several people can share one Mac;
   - your 0.1 data is brought across, with a backup made first.
 - **Setup Center**:
