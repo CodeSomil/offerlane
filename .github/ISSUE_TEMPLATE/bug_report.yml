@@ -1,0 +1,38 @@
+name: Bug report
+description: Something in Offerlane isn't working as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Please **don't include personal details** (your resume, email address, passwords).
+        Security problems: please report them privately instead (Security tab → Report a vulnerability).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what Offerlane did instead.
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes:
+      label: Offerlane version
+      description: Offerlane menu → About Offerlane.
+      placeholder: "0.2.0"
+    validations: { required: true }
+  - type: dropdown
+    id: ai
+    attributes:
+      label: Which AI do you use?
+      options: [Claude account, Claude API key, Ollama, Not set up yet]
+  - type: input
+    id: mac
+    attributes:
+      label: Mac and macOS version
+      placeholder: "MacBook Air M2, macOS 15.1"
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics report (optional, helps a lot)
+      description: In Offerlane, choose Help → Send Diagnostics…, check the report, then copy and paste it here. Names, emails, phone numbers, web addresses and keys are already removed.
+      render: text

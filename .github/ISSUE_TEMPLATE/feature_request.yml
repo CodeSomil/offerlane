@@ -1,0 +1,15 @@
+name: Idea or request
+description: Suggest something that would make Offerlane better.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like Offerlane to do?
+      description: Describe the problem it would solve for you, not just the solution.
+    validations: { required: true }
+  - type: textarea
+    id: sites
+    attributes:
+      label: Career sites involved (if any)
+      description: For example a company's careers page that Offerlane can't read yet.

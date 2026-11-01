@@ -1,78 +1,97 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="Branding/offerlane-wordmark-dark.svg">
-    <img alt="Offerlane" src="Branding/offerlane-wordmark-light.svg" width="460">
+    <img alt="Offerlane" src="Branding/offerlane-wordmark-light.svg" width="420">
   </picture>
 </p>
 
 <p align="center">
   <b>Your lane from résumé to offer.</b><br>
-  A native macOS app that finds roles on company career sites, tailors your résumé for each one,
-  pre-fills the application and stops for you to click Submit. You approve every step.
+  A Mac app that finds roles on company career sites, tailors your résumé for each one, fills in the application,
+  and stops so <b>you</b> click Submit. You approve every step.
 </p>
 
 <p align="center">
   <img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14%2B-111827?logo=apple">
-  <img alt="Swift 6" src="https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white">
-  <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-34D399">
+  <img alt="Version 0.2.0" src="https://img.shields.io/badge/version-0.2.0-4F46E5">
+  <img alt="Apple silicon and Intel" src="https://img.shields.io/badge/Apple%20silicon%20%2B%20Intel-universal-34D399">
 </p>
 
-<p align="center"><img alt="Reviewing a tailored résumé in Offerlane" src="docs/screenshots/review-light.png" width="860"></p>
+<p align="center"><img alt="The Find screen" src="docs/screenshots/find-light.png" width="860"></p>
 
-## What it does
+## How it works
 
-1. **Find Jobs** checks your target companies' own career sites: Greenhouse, Lever, Ashby, Workable, SmartRecruiters and Workday. A free local pre-score narrows the results, then **one batched AI call** scores the best ~25 and picks which résumé version fits.
-2. **You approve** the roles worth applying to. Declined roles are fingerprinted and never come back.
-3. Offerlane **tailors your résumé** for each approved role in one AI call. It reorders and rephrases your own bullets, and drafts a cover letter and screening answers.
-4. **You review every change** in a side-by-side diff with a live PDF preview. A guard **enforced in code** rejects any rewrite that invents a number and flags new tool or company names.
-5. Offerlane **fills the application** in its own browser window at a human pace: Workday's multi-page flow, uploads, dropdowns, screening questions. Before creating a career-site account it asks you, and saves the password in your Keychain. It **stops on the page with Submit**.
-6. **You click Submit.** Replies in your inbox (via IMAP) move each application through acknowledged, assessment, interview and offer. Rejections are hidden but counted.
+```mermaid
+flowchart LR
+    A["🔎 Find Jobs<br/>checks your companies'<br/>career sites"] --> B["Free local pre-score<br/>title, skills, location,<br/>seniority filters"]
+    B --> C["🤖 AI scores the best 25<br/>in one batched call<br/>(answers cached)"]
+    C --> D{"👤 You approve<br/>or decline"}
+    D -- declined --> X["Never shown again"]
+    D -- approved --> E["🤖 AI tailors your résumé<br/>reorders + rephrases your<br/>own bullets, drafts answers"]
+    E --> F{"👤 You review<br/>every change<br/>(invented numbers blocked)"}
+    F -- redo / edit --> E
+    F -- approve --> G["🖥️ Offerlane fills the form<br/>in its own browser,<br/>at a human pace"]
+    G --> H["⏸ Stops at Submit"]
+    H --> I["👤 You click Submit"]
+    I --> J["📬 Replies in your inbox<br/>move the application:<br/>interview → offer"]
+```
 
-| Matches | Applications |
+Nothing is tailored, applied for or created without your say-so. Offerlane never presses Submit, never solves CAPTCHAs and never logs in to LinkedIn.
+
+## Get started in four steps
+
+| 1. Sign in | 2. Connect an AI | 3. Add your résumé | 4. Find jobs |
+|---|---|---|---|
+| <img src="docs/screenshots/welcome-light.png" width="200" alt="Welcome screen"> | <img src="docs/screenshots/1-ai-light.png" width="200" alt="Choose your AI"> | <img src="docs/screenshots/2-resumes-light.png" width="200" alt="Add resumes"> | <img src="docs/screenshots/3-ready-light.png" width="200" alt="Ready to find jobs"> |
+| Email and password, or Continue with Google; Touch ID optional | Claude account, Claude API key, or free local Ollama | PDF, Word, text or LaTeX; several versions welcome | Titles and companies are drafted from your résumé; change anything later |
+
+## What's new in 0.2.0
+- **A fresh design**: calmer layout, full dark mode, faster screens, and a short tour on first launch.
+- **Profiles that stay signed in**:
+  - email and password, or Continue with Google, with optional Touch ID;
+  - several people can share one Mac;
+  - your 0.1 data is brought across, with a backup made first.
+- **Setup Center**:
+  - installs Claude Code or Ollama for you, checking each download's checksum and publisher signature before it runs;
+  - a health dot shows what needs attention, and **Repair Everything** fixes it in one click.
+- **Help in the app** (⌘?): searchable answers, plus **Send Diagnostics**, a report with personal details removed that you see in full before sharing.
+- **Lower AI costs**: answers are cached locally, a per-run limit stops spending, and a live meter shows usage.
+- **Accessibility**: VoiceOver labels, full keyboard use, 4.5:1 contrast everywhere, and Reduce Motion respected.
+- **Security review**:
+  - saved career-site passwords are only typed into their own site;
+  - email verification links are checked before opening;
+  - shipped builds are hardened, with no special permissions.
+- **Gmail (preview)**: read-only, for invited testers. IMAP stays the default.
+
+## A closer look
+
+| | |
 |---|---|
-| <img src="docs/screenshots/matches-light.png" alt="Scored matches waiting for approval"> | <img src="docs/screenshots/applications-light.png" alt="Applications board"> |
-| **Setup: choose your AI** | **Search, drafted by the AI** |
-| <img src="docs/screenshots/1-ai-light.png" alt="Choose your AI"> | <img src="docs/screenshots/4-search-dark.png" alt="Search setup"> |
-
-## Highlights
-- **Bring your own AI**: a Claude Pro/Max subscription (through the official Claude Code CLI), a Claude API key, or **Ollama** (free, private, on your Mac). The AI layer is provider-agnostic, with a deterministic fake for tests.
-- **Low token use**: one batched scoring call per search and one call per tailored résumé, with the static context prompt-cached.
-- **Your LaTeX design stays yours**: LaTeX résumés are compiled by a bundled [tectonic](https://tectonic-typesetting.github.io) with only bullet text swapped. Other résumés use a clean, ATS-friendly template. A page-fit loop and an ATS text check run on every PDF.
-- **Work-authorization aware**: postings are tagged by where you can work without sponsorship, the JD's sponsorship wording and public sponsor registers, and screening questions are answered accordingly.
-- **Native and private**: SwiftUI, SQLite (GRDB) and Keychain. No telemetry; everything stays on your Mac.
-
-## Safety by design
-- Offerlane **never clicks a final Submit**, never solves or bypasses CAPTCHAs, never hides that it is automation, and never logs in to LinkedIn.
-- Every state change goes through an explicit state machine. Approval gates can't be skipped: nothing is tailored, applied for or created without you.
-- Career-site accounts are created only after you approve that company, and passwords go to Keychain before the Create button is clicked.
-- Respect each site's terms of use. Offerlane is a personal assistant for your own applications, not a bulk tool.
-
-## Privacy
-- Your data lives in `~/Library/Application Support/Offerlane/`. Secrets (API key, email app password, career-site passwords) live **only in Keychain**.
-- What leaves your Mac: résumé text and job descriptions go to the AI provider you chose; form answers go to the career sites you apply to; nothing else.
-- Settings has **Export Everything** and **Delete All My Data**. Logs redact emails, phone numbers and keys.
+| <img src="docs/screenshots/review-light.png" alt="Reviewing a tailored résumé" width="420"><br>**Review every change.** Your original in red, the tailored text in green, with a live PDF preview. | <img src="docs/screenshots/applications-light.png" alt="Applications board" width="420"><br>**Track every application.** Email replies move cards along by themselves. |
+| <img src="docs/screenshots/setup-center-dark.png" alt="Setup Center" width="420"><br>**Setup Center.** Checks your AI, internet, storage and Mac, and fixes problems with one click. | <img src="docs/screenshots/help-light.png" alt="In-app Help" width="420"><br>**Help built in.** Search answers, replay the tour, or create a diagnostics report. |
 
 ## Install
-Download `Offerlane-<version>.dmg` (drag to Applications) or `Offerlane-<version>.pkg` (installer) from [Releases](../../releases), and check it against `SHA256SUMS.txt`.
+1. Download **Offerlane-0.2.0.dmg** (or the .pkg) from [Releases](../../releases), and check it against `SHA256SUMS.txt` if you like.
+2. Open the DMG and drag **Offerlane** into **Applications**.
+3. Open Offerlane and follow the four steps above. It takes about five minutes.
 
-Builds aren't notarized yet, so macOS asks once: right-click Offerlane → **Open** → **Open**. For the .pkg, use **System Settings → Privacy & Security → Open Anyway**.
+Requires macOS 14 (Sonoma) or later, on Apple silicon or Intel. There's nothing else to install by hand: the Setup Center handles the AI.
 
-Then see the [user guide](docs/USER_GUIDE.md).
+## Choose your AI
+| | Cost | Notes |
+|---|---|---|
+| **Claude account** (recommended) | Your Claude Pro or Max plan | Uses the official Claude Code tool, installed and verified for you |
+| **Claude API key** | Pay per use: about $0.001 per Find Jobs run, about $0.03 per tailored résumé | Daily usage in Settings; per-run limit |
+| **Ollama** | Free; runs on your Mac | Slower; needs a few GB of disk; the model is picked for your Mac's memory |
 
-## Build from source
-Requirements: macOS 14+, Xcode 16+, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
+## Privacy
+Everything stays on your Mac, and passwords and keys stay in your Keychain. Only résumé text and job descriptions go to the AI you choose, and only form answers go to the career sites you apply to. There's no telemetry. Read the [privacy policy](docs/PRIVACY.md).
 
-```bash
-scripts/fetch-tectonic.sh     # vendors tectonic 0.17.0 (pinned SHA-256) and warms its package cache
-scripts/build.sh              # Debug build → build/DerivedData/Build/Products/Debug/Offerlane.app
-scripts/test.sh core          # unit + integration tests (no network, deterministic fake AI)
-scripts/test.sh ui            # UI tests
-scripts/test.sh apply         # apply engine against bundled mock career sites (runs inside the app)
-scripts/package.sh            # universal Release → dist/Offerlane-<version>.dmg + .pkg + SHA256SUMS.txt
-```
-To sign and notarize, set `DEVELOPER_ID`, `INSTALLER_ID` and `NOTARY_PROFILE` (see `scripts/package.sh`).
-
-More detail: [architecture](docs/ARCHITECTURE.md) · [testing](docs/TESTING.md) · [contributing](CONTRIBUTING.md) · [security](SECURITY.md).
+## Help and feedback
+- **In the app:** Help → Offerlane Help (⌘?).
+- **Online:** the [user guide](docs/USER_GUIDE.md).
+- **Bugs:** [open an issue](../../issues/new/choose) and attach a report from Help → Send Diagnostics….
+- **Security issues:** see [SECURITY.md](SECURITY.md).
 
 ## License
-[MIT](LICENSE) © 2026 Somil Manke. Offerlane isn't affiliated with Anthropic, Ollama, Workday, Greenhouse, Lever, Ashby, Workable or SmartRecruiters; names are used only to describe compatibility. Bundled tectonic is MIT-licensed.
+See [LICENSE](LICENSE).
