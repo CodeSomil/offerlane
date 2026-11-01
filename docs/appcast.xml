@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sparkle-ready update feed stub. Sparkle isn't linked yet: it needs Developer ID signing and an EdDSA key.
+     To enable: add the Sparkle package, set SUFeedURL (Info.plist) to where this file is hosted, set SUPublicEDKey,
+     and add one <item> per release with the signed DMG's URL, length and sparkle:edSignature. -->
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Offerlane</title>
+    <item>
+      <title>Offerlane 0.1.0</title>
+      <sparkle:version>1</sparkle:version>
+      <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <enclosure url="https://example.invalid/offerlane/Offerlane-0.1.0.dmg" length="0" type="application/octet-stream"/>
+    </item>
+  </channel>
+</rss>

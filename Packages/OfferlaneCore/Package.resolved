@@ -1,0 +1,60 @@
+{
+  "originHash" : "448fd3dfaeeb47c6277cfb9d5abb6c00032b6e7522d43e0e6eb62f664930ccf6",
+  "pins" : [
+    {
+      "identity" : "grdb.swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/groue/GRDB.swift.git",
+      "state" : {
+        "revision" : "b83108d10f42680d78f23fe4d4d80fc88dab3212",
+        "version" : "7.11.1"
+      }
+    },
+    {
+      "identity" : "h",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/rarestype/h",
+      "state" : {
+        "revision" : "aa3626829160917d4378330617971977cbd78f5b",
+        "version" : "1.0.1"
+      }
+    },
+    {
+      "identity" : "swift-argument-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-argument-parser",
+      "state" : {
+        "revision" : "6a52f3251125d74daf04fcbd5e6f08a75d074382",
+        "version" : "1.8.2"
+      }
+    },
+    {
+      "identity" : "swift-png",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/tayloraswift/swift-png",
+      "state" : {
+        "revision" : "2d17c6c51c098628574c0383f1119892655a73a2",
+        "version" : "4.5.2"
+      }
+    },
+    {
+      "identity" : "swiftterm",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/migueldeicaza/SwiftTerm",
+      "state" : {
+        "revision" : "a183c15b52858530a17de57dcc72b93eeebc9857",
+        "version" : "1.99.2"
+      }
+    },
+    {
+      "identity" : "zipfoundation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/weichsel/ZIPFoundation.git",
+      "state" : {
+        "revision" : "22787ffb59de99e5dc1fbfe80b19c97a904ad48d",
+        "version" : "0.9.20"
+      }
+    }
+  ],
+  "version" : 3
+}

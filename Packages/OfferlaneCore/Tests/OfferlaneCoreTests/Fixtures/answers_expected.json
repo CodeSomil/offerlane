@@ -1,0 +1,483 @@
+{
+ "profile": {
+  "personal": {
+   "first_name": "Test",
+   "last_name": "Person",
+   "full_name": "Test Person",
+   "email": "test@example.com",
+   "phone": "+44 7700 900000",
+   "city": "London",
+   "state": "",
+   "country": "United Kingdom",
+   "linkedin": "https://linkedin.com/in/test",
+   "github": "",
+   "portfolio": ""
+  },
+  "work": {
+   "current_company": "Acme",
+   "current_title": "Senior Data Scientist",
+   "years_experience": 5,
+   "notice_period": "2 months",
+   "current_salary": "",
+   "expected_salary": "\u00a390k",
+   "willing_to_relocate": true,
+   "open_to_remote": true
+  },
+  "education": {
+   "degree": "BSc",
+   "school": "Uni",
+   "graduation_year": 2020
+  },
+  "authorization": {
+   "citizenship": "British",
+   "authorized_countries": [
+    "United Kingdom"
+   ],
+   "needs_sponsorship": true
+  },
+  "eeo": {
+   "gender": "Male",
+   "race": "Decline to self-identify",
+   "veteran": "I am not a protected veteran",
+   "disability": "No",
+   "sexual_orientation": "Decline to self-identify"
+  },
+  "misc": {
+   "how_heard": "Company Website",
+   "start_date": "ASAP"
+  }
+ },
+ "answers_md": "### Cover letter\nHello from the cover letter\n\n### Why Globex?\nBecause\n\n### Why do you want to work here?\nBecause the mission fits.\n\n### What is your biggest strength?\nForecasting.\n",
+ "want": [
+  {
+   "type": "text",
+   "label": "First Name *",
+   "consent": false,
+   "value": "Test"
+  },
+  {
+   "type": "text",
+   "label": "Last Name",
+   "consent": false,
+   "value": "Person"
+  },
+  {
+   "type": "text",
+   "label": "Email",
+   "consent": false,
+   "value": "test@example.com"
+  },
+  {
+   "type": "text",
+   "label": "Phone Number",
+   "consent": false,
+   "value": "7700 900000"
+  },
+  {
+   "type": "text",
+   "label": "Country Code",
+   "consent": false,
+   "value": "+44"
+  },
+  {
+   "type": "text",
+   "label": "Phone",
+   "consent": false,
+   "value": "+44 7700 900000"
+  },
+  {
+   "type": "text",
+   "label": "LinkedIn Profile",
+   "consent": false,
+   "value": "https://linkedin.com/in/test"
+  },
+  {
+   "type": "select",
+   "label": "Will you now or in the future require visa sponsorship? *",
+   "consent": false,
+   "value": "No"
+  },
+  {
+   "type": "select",
+   "label": "Are you legally authorized to work in the United Kingdom?",
+   "consent": false,
+   "value": "Yes"
+  },
+  {
+   "type": "select",
+   "label": "Are you legally authorized to work in the country in which the job is located?",
+   "consent": false,
+   "value": "Yes"
+  },
+  {
+   "type": "text",
+   "label": "Current Company",
+   "consent": false,
+   "value": "Acme"
+  },
+  {
+   "type": "text",
+   "label": "How many years of experience do you have?",
+   "consent": false,
+   "value": "5"
+  },
+  {
+   "type": "text",
+   "label": "Notice period",
+   "consent": false,
+   "value": "2 months"
+  },
+  {
+   "type": "text",
+   "label": "Expected salary",
+   "consent": false,
+   "value": "\u00a390k"
+  },
+  {
+   "type": "text",
+   "label": "Current salary",
+   "consent": false,
+   "value": null
+  },
+  {
+   "type": "select",
+   "label": "How did you hear about us?",
+   "consent": false,
+   "value": "Company Website"
+  },
+  {
+   "type": "text",
+   "label": "City",
+   "consent": false,
+   "value": "London"
+  },
+  {
+   "type": "text",
+   "label": "Location",
+   "consent": false,
+   "value": "London, United Kingdom"
+  },
+  {
+   "type": "text",
+   "label": "School",
+   "consent": false,
+   "value": "Uni"
+  },
+  {
+   "type": "select",
+   "label": "Gender",
+   "consent": false,
+   "value": "Male"
+  },
+  {
+   "type": "select",
+   "label": "Veteran status",
+   "consent": false,
+   "value": "I am not a protected veteran"
+  },
+  {
+   "type": "textarea",
+   "label": "Why are you interested in Globex? *",
+   "consent": false,
+   "value": "Because"
+  },
+  {
+   "type": "textarea",
+   "label": "Cover letter",
+   "consent": false,
+   "value": "Hello from the cover letter"
+  },
+  {
+   "type": "textarea",
+   "label": "Tell us about your biggest strength",
+   "consent": false,
+   "value": "Forecasting."
+  },
+  {
+   "type": "checkbox",
+   "label": "I agree to the privacy policy *",
+   "consent": false,
+   "value": null
+  },
+  {
+   "type": "select",
+   "label": "Have you previously worked for Acme?",
+   "consent": false,
+   "value": "No"
+  },
+  {
+   "type": "text",
+   "label": "Are you willing to relocate?",
+   "consent": false,
+   "value": "Yes"
+  },
+  {
+   "type": "text",
+   "label": "Website",
+   "consent": false,
+   "value": null
+  },
+  {
+   "type": "text",
+   "label": "Graduation year",
+   "consent": false,
+   "value": "2020"
+  },
+  {
+   "type": "text",
+   "label": "Something unrelated",
+   "consent": false,
+   "value": null
+  },
+  {
+   "type": "text",
+   "label": "First Name *",
+   "consent": true,
+   "value": "Test"
+  },
+  {
+   "type": "text",
+   "label": "Last Name",
+   "consent": true,
+   "value": "Person"
+  },
+  {
+   "type": "text",
+   "label": "Email",
+   "consent": true,
+   "value": "test@example.com"
+  },
+  {
+   "type": "text",
+   "label": "Phone Number",
+   "consent": true,
+   "value": "7700 900000"
+  },
+  {
+   "type": "text",
+   "label": "Country Code",
+   "consent": true,
+   "value": "+44"
+  },
+  {
+   "type": "text",
+   "label": "Phone",
+   "consent": true,
+   "value": "+44 7700 900000"
+  },
+  {
+   "type": "text",
+   "label": "LinkedIn Profile",
+   "consent": true,
+   "value": "https://linkedin.com/in/test"
+  },
+  {
+   "type": "select",
+   "label": "Will you now or in the future require visa sponsorship? *",
+   "consent": true,
+   "value": "No"
+  },
+  {
+   "type": "select",
+   "label": "Are you legally authorized to work in the United Kingdom?",
+   "consent": true,
+   "value": "Yes"
+  },
+  {
+   "type": "select",
+   "label": "Are you legally authorized to work in the country in which the job is located?",
+   "consent": true,
+   "value": "Yes"
+  },
+  {
+   "type": "text",
+   "label": "Current Company",
+   "consent": true,
+   "value": "Acme"
+  },
+  {
+   "type": "text",
+   "label": "How many years of experience do you have?",
+   "consent": true,
+   "value": "5"
+  },
+  {
+   "type": "text",
+   "label": "Notice period",
+   "consent": true,
+   "value": "2 months"
+  },
+  {
+   "type": "text",
+   "label": "Expected salary",
+   "consent": true,
+   "value": "\u00a390k"
+  },
+  {
+   "type": "text",
+   "label": "Current salary",
+   "consent": true,
+   "value": null
+  },
+  {
+   "type": "select",
+   "label": "How did you hear about us?",
+   "consent": true,
+   "value": "Company Website"
+  },
+  {
+   "type": "text",
+   "label": "City",
+   "consent": true,
+   "value": "London"
+  },
+  {
+   "type": "text",
+   "label": "Location",
+   "consent": true,
+   "value": "London, United Kingdom"
+  },
+  {
+   "type": "text",
+   "label": "School",
+   "consent": true,
+   "value": "Uni"
+  },
+  {
+   "type": "select",
+   "label": "Gender",
+   "consent": true,
+   "value": "Male"
+  },
+  {
+   "type": "select",
+   "label": "Veteran status",
+   "consent": true,
+   "value": "I am not a protected veteran"
+  },
+  {
+   "type": "textarea",
+   "label": "Why are you interested in Globex? *",
+   "consent": true,
+   "value": "Because"
+  },
+  {
+   "type": "textarea",
+   "label": "Cover letter",
+   "consent": true,
+   "value": "Hello from the cover letter"
+  },
+  {
+   "type": "textarea",
+   "label": "Tell us about your biggest strength",
+   "consent": true,
+   "value": "Forecasting."
+  },
+  {
+   "type": "checkbox",
+   "label": "I agree to the privacy policy *",
+   "consent": true,
+   "value": "Yes"
+  },
+  {
+   "type": "select",
+   "label": "Have you previously worked for Acme?",
+   "consent": true,
+   "value": "No"
+  },
+  {
+   "type": "text",
+   "label": "Are you willing to relocate?",
+   "consent": true,
+   "value": "Yes"
+  },
+  {
+   "type": "text",
+   "label": "Website",
+   "consent": true,
+   "value": null
+  },
+  {
+   "type": "text",
+   "label": "Graduation year",
+   "consent": true,
+   "value": "2020"
+  },
+  {
+   "type": "text",
+   "label": "Something unrelated",
+   "consent": true,
+   "value": null
+  }
+ ],
+ "pick": [
+  {
+   "options": [
+    "Select...",
+    "Yes",
+    "No"
+   ],
+   "v": "No",
+   "pick": "No"
+  },
+  {
+   "options": [
+    "Male",
+    "Female",
+    "I do not wish to answer"
+   ],
+   "v": "Decline to self-identify",
+   "pick": "I do not wish to answer"
+  },
+  {
+   "options": [
+    "Yes, I agree",
+    "No"
+   ],
+   "v": "Yes",
+   "pick": "Yes, I agree"
+  },
+  {
+   "options": [
+    "India",
+    "United Kingdom",
+    "United States"
+   ],
+   "v": "United Kingdom",
+   "pick": "United Kingdom"
+  },
+  {
+   "options": [
+    "Mobile",
+    "Landline"
+   ],
+   "v": "Mobile",
+   "pick": "Mobile"
+  },
+  {
+   "options": [
+    "0-2 years",
+    "3-5 years"
+   ],
+   "v": "5",
+   "pick": "3-5 years"
+  },
+  {
+   "options": [
+    "London, UK",
+    "Paris"
+   ],
+   "v": "London, England",
+   "pick": "London, UK"
+  },
+  {
+   "options": [
+    "--",
+    "Company website",
+    "LinkedIn"
+   ],
+   "v": "company website",
+   "pick": "Company website"
+  }
+ ]
+}

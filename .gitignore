@@ -1,0 +1,19 @@
+.DS_Store
+build/
+dist/
+DerivedData/
+.build/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+Packages/OfferlaneCore/.swiftpm/
+Vendor/tectonic/bin/
+Vendor/tectonic/cache/
+Packages/OfferlaneCore/Tests/OfferlaneCoreTests/Fixtures/private/
+# Never commit personal data
+*.sqlite
+*.sqlite-*
+profile.json
+!Packages/OfferlaneCore/Tests/**/answers_expected.json
+.env
+*.p12
+*.mobileprovision

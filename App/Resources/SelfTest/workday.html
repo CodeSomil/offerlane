@@ -1,0 +1,46 @@
+<!doctype html><meta charset=utf-8><title>Acme Careers (Workday mock)</title>
+<style>body{font:14px system-ui;margin:20px}.ff{margin:10px 0}[role=listbox]{border:1px solid #999;list-style:none;padding:0;margin:0;position:absolute;background:#fff}[role=option]{padding:4px 8px;cursor:pointer}.err{color:#c00}.hide{display:none}</style>
+<div id=app></div>
+<script>
+/* A faithful-enough Workday imitation: same data-automation-id hooks, sign-in/create-account, multi-step wizard with validation. */
+const S={step:'job',account:null,signed:false,data:{},submitted:false,uploaded:false};
+const steps=['Autofill with Resume','My Information','My Experience','Application Questions','Voluntary Disclosures','Review'];
+const dd=(id,label,opts,req)=>`<div class=ff data-automation-id="formField-${id}"><label>${label}${req?'*':''}</label><br><button type=button aria-haspopup="listbox" data-req="${req?1:0}" data-k="${id}" onclick="openDD(this)">${S.data[id]||'Select One'}</button><ul role=listbox class=hide>${opts.map(o=>`<li role=option onclick="pickDD('${id}',this)">${o}</li>`).join('')}</ul></div>`;
+const tx=(id,label,req,type='text')=>`<div class=ff data-automation-id="formField-${id}"><label for="${id}">${label}${req?'*':''}</label><br><input id="${id}" data-automation-id="${id}" type="${type}" ${req?'aria-required="true"':''} value="${S.data[id]||''}" oninput="S.data['${id}']=this.value"></div>`;
+function openDD(b){document.querySelectorAll('[role=listbox]').forEach(u=>u.classList.add('hide'));b.nextElementSibling.classList.remove('hide')}
+function pickDD(k,li){S.data[k]=li.textContent;render()}
+function nav(label){return `<div data-automation-id="progressBarActiveStep">${steps[S.i]}</div>`}
+function render(){const A=document.getElementById('app');let h='';
+ if(S.submitted){A.innerHTML='<h2>Application submitted</h2><p>Thank you for applying to Acme.</p>';return}
+ if(S.step=='job'){A.innerHTML='<h2>Senior Data Scientist</h2><p>Job description…</p><button data-automation-id="adventureButton" onclick="S.step=\'modal\';render()">Apply</button>';return}
+ if(S.step=='modal'){A.innerHTML='<div role=dialog><button data-automation-id="autofillWithResume" onclick="S.step=\'signin\';render()">Autofill with Resume</button> <button data-automation-id="applyManually" onclick="S.step=\'signin\';render()">Apply Manually</button></div>';return}
+ if(S.step=='signin'){A.innerHTML=`<div data-automation-id="signInContent"><h2>Sign In</h2>${tx('email','Email Address',1,'email')}<div class=ff><label for=password>Password*</label><br><input id=password data-automation-id="password" type=password></div>
+  <div class=err id=e></div><button data-automation-id="signInSubmitButton" onclick="signin()">Sign In</button> <a href="#" data-automation-id="createAccountLink" onclick="S.step='create';render();return false">Create Account</a></div>`;return}
+ if(S.step=='create'){A.innerHTML=`<h2>Create Account</h2>${tx('email','Email Address',1,'email')}<div class=ff><label for=pw>Password*</label><br><input id=pw data-automation-id="password" type=password></div><div class=ff><label for=vp>Verify New Password*</label><br><input id=vp data-automation-id="verifyPassword" type=password></div>
+  <div class=ff><input type=checkbox id=cac data-automation-id="createAccountCheckbox"><label for=cac>Yes, I have read and consent to the terms and conditions*</label></div><div class=err id=e></div><button data-automation-id="createAccountSubmitButton" onclick="create()">Create Account</button>`;return}
+ const i=S.i;h=nav();
+ if(i==0)h+=`<div class=ff><label>Upload resume</label><input type=file data-automation-id="file-upload-input-ref" onchange="S.uploaded=true;render()">${S.uploaded?'<div data-automation-id="file-upload-successful">resume.pdf</div>':''}</div>`;
+ if(i==1)h+=`<div class=ff data-automation-id="formField-source"><label>How Did You Hear About Us?*</label><br>${S.data.source?`<div data-automation-id="selectedItem">${S.data.source}</div>`:`<input data-automation-id="searchBox" onkeydown="if(event.key=='Enter'){document.getElementById('po').classList.remove('hide')}"><div id=po class=hide><div data-automation-id="promptOption" onclick="S.data.source='Company Website';render()">Company Website</div></div>`}</div>`
+   +dd('country','Country',['India','United Kingdom','United States'],1)+tx('legalNameSection_firstName','Given Name(s)',1)+tx('legalNameSection_lastName','Family Name',1)+tx('addressSection_city','City',1)
+   +dd('phoneType','Phone Device Type',['Mobile','Landline'],1)+tx('phone-number','Phone Number',1)
+   +`<fieldset><legend>Have you previously worked for Acme?*</legend><label><input type=radio name=prev required onchange="S.data.prev='Yes'" ${S.data.prev=='Yes'?'checked':''}>Yes</label><label><input type=radio name=prev required onchange="S.data.prev='No'" ${S.data.prev=='No'?'checked':''}>No</label></fieldset>`;
+ if(i==2)h+='<p>Work experience was filled from your resume.</p>';
+ if(i==3)h+=dd('sponsor','Will you now or in the future require sponsorship for employment visa status?',['Yes','No'],1)+dd('auth','Are you legally authorized to work in the country in which the job is located?',['Yes','No'],1)
+   +`<div class=ff><label for=why>Why do you want to work at Acme?*</label><br><textarea id=why aria-required=true oninput="S.data.why=this.value">${S.data.why||''}</textarea></div>`;
+ if(i==4)h+=dd('gender','Gender',['Male','Female','I do not wish to answer'],0)+`<div class=ff><input type=checkbox id=agr data-automation-id="agreementCheckbox" ${S.data.agr?'checked':''} onchange="S.data.agr=this.checked"><label for=agr>I have read and consent to the terms and conditions*</label></div>`;
+ if(i==5)h+='<h3>Review</h3><p>Please review your application.</p>';
+ h+=`<div id=errs></div><button data-automation-id="bottom-navigation-next-button" onclick="next()">${i==5?'Submit':'Save and Continue'}</button>`;A.innerHTML=h}
+function signin(){const e=document.querySelector('[data-automation-id=email]').value,p=document.getElementById('password').value;
+ if(S.account&&S.account.e==e&&S.account.p==p){S.signed=true;S.step='wiz';S.i=0;render()}else document.getElementById('e').innerHTML='<div data-automation-id="errorMessage">Invalid email or password</div>'}
+function create(){const e=document.querySelector('[data-automation-id=email]').value,p=document.getElementById('pw').value,v=document.getElementById('vp').value;
+ if(!e||!p||p!=v||!document.getElementById('cac').checked||!/[A-Z]/.test(p)||!/[0-9]/.test(p)){document.getElementById('e').innerHTML='<div data-automation-id="errorMessage">Check the fields</div>';return}
+ S.account={e,p};window.CREATED=S.account;S.step='wiz';S.i=0;render()}
+function next(){const i=S.i,miss=[];const need=(c,l)=>{if(!c)miss.push(l)};
+ if(i==0)need(S.uploaded,'Resume');
+ if(i==1){need(S.data.source,'How Did You Hear About Us?');need(S.data.country,'Country');need(S.data.legalNameSection_firstName,'Given Name');need(S.data.legalNameSection_lastName,'Family Name');need(S.data.addressSection_city,'City');need(S.data.phoneType,'Phone Device Type');need(S.data['phone-number'],'Phone Number');need(S.data.prev,'Previously worked')}
+ if(i==3){need(S.data.sponsor,'Sponsorship');need(S.data.auth,'Authorized');need(S.data.why,'Why')}
+ if(i==4)need(S.data.agr,'Terms');
+ if(miss.length){document.getElementById('errs').innerHTML=miss.map(m=>`<div data-automation-id="errorMessage">${m} is required</div>`).join('');return}
+ if(i==5){S.submitted=true;window.SUBMITTED=S.data}else S.i++;render()}
+render();
+</script>

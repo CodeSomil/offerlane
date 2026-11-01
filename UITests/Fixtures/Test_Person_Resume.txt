@@ -1,0 +1,14 @@
+Test Person
+London, UK | +44 7700 900000 | test@example.com
+Senior Data Scientist, Acme 2022 - now
+Built a demand forecasting system covering 1,200 products across 14 markets, cutting error by 30%.
+Shipped 4 production machine learning models serving 2 million users with real-time feature pipelines.
+Led a team of 3 analysts on pricing experiments that informed the annual pricing strategy review.
+Designed the experimentation platform used by 6 product teams to run A/B tests with sequential testing.
+Partnered with finance to build revenue forecasts reviewed monthly by the executive leadership team.
+Migrated legacy SAS reporting to Python and dbt, cutting the monthly close reporting time by 2 days.
+Data Scientist, Beta 2020 - 2022
+Designed churn models with gradient boosting, improving retention by 8% across the subscription base.
+Automated weekly reporting in Python and SQL so stakeholders got numbers every Monday morning by 9am.
+Education: BSc Mathematics, University of Somewhere, 2016 - 2020
+Skills: Python, SQL, forecasting, machine learning
