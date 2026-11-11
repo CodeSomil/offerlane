@@ -18,13 +18,13 @@ body:
     attributes:
       label: Offerlane version
       description: Offerlane menu → About Offerlane.
-      placeholder: "0.2.0"
+      placeholder: "0.3.0"
     validations: { required: true }
   - type: dropdown
     id: ai
     attributes:
       label: Which AI do you use?
-      options: [Claude account, Claude API key, Ollama, Not set up yet]
+      options: [OpenRouter, Google Gemini, Groq, Cloudflare Workers AI, Claude API key, Ollama, Own endpoint, Not set up yet]
   - type: input
     id: mac
     attributes:

@@ -1,6 +1,6 @@
 # Offerlane privacy policy
 
-*Last updated: 2 November 2026 · applies to Offerlane 0.2.0 for macOS*
+*Last updated: 11 November 2026 · applies to Offerlane 0.3.0 for macOS*
 
 Offerlane is a desktop app. **It has no server and no account system of its own, and it collects no analytics or telemetry.** We (the developer) never receive your data.
 
@@ -12,9 +12,9 @@ Offerlane is a desktop app. **It has no server and no account system of its own,
 ## What leaves your Mac, and where it goes
 | Data | Sent to | When |
 |---|---|---|
-| Resume text, job descriptions, your search preferences | The AI you chose: Anthropic (Claude) or Ollama on your own Mac | When reading a resume, scoring roles, tailoring |
+| Resume text, job descriptions, your search preferences | The AI you connect (for example OpenRouter, Google Gemini, Groq, Cloudflare or Anthropic), or Ollama on your own Mac. A backup AI gets it only when the first one can't answer | When reading a resume, scoring roles, tailoring |
 | Your answers to application questions, your resume PDF | The career site you're applying to | Only when you approve an application |
-| Requests for public job listings | Career-site job boards (Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Workday) | When you click Find Jobs |
+| Requests for public job listings | Career-site job boards (Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Workday) and the Remotive remote-jobs feed | When you click Find Jobs |
 | Your name and email (from Google) | Google | If you choose **Continue with Google** |
 | Email headers and snippets | Read *from* your mailbox (IMAP or Gmail, read-only); never sent anywhere | If you turn on email tracking |
 | Notification text | ntfy.sh | Only if you set up phone notifications |
