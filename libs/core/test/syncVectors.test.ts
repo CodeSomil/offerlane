@@ -2,6 +2,7 @@
 // each side must open the other's. Test-only keys: AK = bytes 0..31, RK = bytes 0xa0..0xaf. Regenerate: OFFERLANE_WRITE_GOLDEN=1.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { job, profile } from "../src/models.js";
 import { formatRecoveryKey, importAccountKey, openBlob, sealBlob, syncAAD, unwrapAccountKey, wrapAccountKey, type SyncKind } from "../src/sync.js";
 
 const FX = new URL("../../../Packages/OfferlaneCore/Tests/OfferlaneCoreTests/Fixtures/sync/", import.meta.url);
@@ -32,6 +33,22 @@ describe("sync vectors shared with Swift", () => {
     const f = new URL("swift_sealed.json", FX);
     expect(existsSync(f)).toBe(true);
     await opens(JSON.parse(readFileSync(f, "utf8")));
+  });
+
+  it("reads the Mac Store's profile and applications with the web's own decoders, losing nothing", () => {
+    const v: Vectors = JSON.parse(readFileSync(new URL("swift_sealed.json", FX), "utf8"));
+    const of = (k: SyncKind) => JSON.parse(v.blobs.find((b) => b.kind === k)!.plaintext);
+    const p = of("profile");
+    expect(profile(p)).toEqual(p);
+    const apps = of("applications") as Record<string, { job: unknown; status: string; score: number; created: string; updated: string }>;
+    expect(Object.keys(apps)).toEqual(["gh:acme:1"]);
+    const rec = apps["gh:acme:1"]!;
+    expect(job(rec.job as never)).toEqual(rec.job);
+    expect(rec.status).toBe("tailoring");
+    expect(rec.score).toBe(0.82);
+    expect(rec.updated).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/);
+    expect(new Date(rec.created).getTime()).toBeLessThanOrEqual(new Date(rec.updated).getTime());
+    expect(JSON.stringify(rec)).not.toContain("Mac-only");
   });
 });
 

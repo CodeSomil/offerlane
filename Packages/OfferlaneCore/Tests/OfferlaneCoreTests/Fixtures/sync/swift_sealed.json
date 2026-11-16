@@ -1,22 +1,36 @@
 {
   "blobs" : [
     {
-      "blob" : "Aa68tUL5X5Nk0AXCu4Z2Sx0NSJ5igHh5oJ5UxExQYRPsVBt3B9s1fEmrdedOqRS6nRuzc0JNoYLxqjtVYxAIxKne+fqVVIRo3oUK",
+      "blob" : "AeJLF9gnZbeVmDFM0EQueMss2QeUI2HtR9BivtSylS5euWdK3wpNdH2ZzoJjwOiPKpthePccoxtUm1PPJd97smAd3LbcCSpsBVao",
       "keyId" : "0123abcd0123abcd",
       "kind" : "resumes",
       "plaintext" : "{\"name\":\"Zoë Example\",\"label\":\"Café ☕️\"}",
       "version" : 2
     },
     {
-      "blob" : "AQS38MJY7EvF6/7Bb6roKqFW7EyGsf+Zro3o4+C9VbF4",
+      "blob" : "AesVu5v+94AXMdoMWYs2ZP+FHVlCMvU+K9FPKpWOxxfR",
       "keyId" : "0123abcd0123abcd",
       "kind" : "settings",
       "plaintext" : "null",
       "version" : 1
+    },
+    {
+      "blob" : "AezkrmhcA05BHwLj0C1icgqo79cqWwPrtvlE0xObWbWlQuiQ5kDTNSuHAD0K7iZLsgx7V9h9nFk+BUOjKvKUhZkfbXDQv+SpTFesU7G7CiaTBOV2ZTmt3hx/jOFfcU0cwkLWEiCcw4YSR7iFxii9DNKWvPx4KBkwEQxU1ehiBT0eGhqgaw7C7xft5FhsQLvWK2j5x8CEizauW0pJMsIvJFvkadZhDA9IZkNB/Y7u5rzr/Ymn1FAOXfOwSKGJFomY49S4WUr2b321N+v6FIB344hY78idua9aDnf7YFXbWynSe7NsggNqY05+eTVqJmvBiLBFcxQeMlEwwQdQThgygM0fzvwdUPfd8I5d60GPKxQGJxa/YX3SUU4sBCWdKcdfP8Esti3hMyB68JMtHUqRaZn2KfYUYFHNlV995WI89ejsxPMZlHsicIEFS3aOFNNRUrTBsEW313Z0G9UAna75QIi4tff8OmtHLq/LXrhuV74jRZnfWZzUblO4IZnCogDB1bY5nftvDXxx16mcC8U0kSowEq5FBcCE+yFjF55hiQOP+6Xrstq7kBC029i9Mp0r7xzUfsu+aXrXuZspioOWWMwcCMg/9SLpGUxMo9a0TpClmqKUnXvjqFxa+EcpLdcGhjFBOg4ZRpXpVepblr9NxUnbAzmNX0HY9sskkGSls8TjQwwr8ulCrkIPzTxwtqO7UNQkEVQIOolWQC4tTPw9gjrrwbAkJwvf+xG3J3nfGoYiE7zdm8m+rwVEuiR2kuswiMNQeh8SIRbM2QQb1vArTOMdgvgD++S79tsZv/+AH695qVhUS//W5iQJOjTeO3tgS/ZTGdBHcNKLbU7GhmzSszF76pBlypH6i5xmoXVnpIa6EUQ/6R7K5j9BoH7xvhNj1+3Q/FXsGZgF8+QLaKmaGjGzNicToSUoaroCXgQ+gDfCr3BkX2W2bzi00XXxcHNhsDfHBfwFVJ6hFvwrW+M1URFDvrEkofHcDaSE/Fo439UyH0JqwhEJOznSZ7SzWmHUcgSFkr6HPWkp8bL+oodKGRCrXUyXX8gd/Api+tBGtWZhLEpzsYmoxMCAwRznYh4cx6GzToHKBQBiyvtRHNsWicPUeIpW4gQkwLWmVAmgVqdox4OzQ/fd2j04lpsFDTusIsN5ecIzMfexR5aP/Ux3AFOhdv80IjeRLzyZRGRyEUoL78n7OixrUbYdY6sD57rrzN//+yDAZwTq8P83iHCzxipBVBFgG4DZtYt0U42HTAKOhVKFwwg=",
+      "keyId" : "0123abcd0123abcd",
+      "kind" : "profile",
+      "plaintext" : "{\"authorization\":{\"authorized_countries\":[\"United Kingdom\"],\"citizenship\":\"\",\"needs_sponsorship\":true},\"education\":{\"degree\":\"\",\"graduation_year\":\"\",\"school\":\"\"},\"eeo\":{\"disability\":\"Decline to self-identify\",\"gender\":\"Decline to self-identify\",\"race\":\"Decline to self-identify\",\"sexual_orientation\":\"Decline to self-identify\",\"veteran\":\"Decline to self-identify\"},\"misc\":{\"how_heard\":\"Company website\",\"pronouns\":\"\",\"start_date\":\"\"},\"personal\":{\"address\":\"\",\"city\":\"\",\"country\":\"\",\"email\":\"\",\"first_name\":\"\",\"full_name\":\"\",\"github\":\"\",\"last_name\":\"\",\"linkedin\":\"\",\"phone\":\"\",\"portfolio\":\"\",\"postal_code\":\"\",\"state\":\"\"},\"prefs\":{\"dealbreakers\":\"no on-site 5 days\",\"notes\":\"prefers fintech\",\"paper\":\"A4\"},\"work\":{\"current_company\":\"Acme\",\"current_salary\":\"£70k\",\"current_title\":\"Senior Data Scientist\",\"expected_salary\":\"£85k\",\"notice_period\":\"\",\"open_to_remote\":true,\"willing_to_relocate\":false,\"years_experience\":\"5\"}}",
+      "version" : 4
+    },
+    {
+      "blob" : "AdDDn55hI3QSfrRY2kDJxaIrGcymWhrEtQzLflIVz6shbkn0Xl8/oXUWsDCY7Z7eg+zbL4o+uLkiQOIcMTQ3yAfnyRnKBnS20cNDkPtll79HnwRaWiacjyvrbOco4Kuu+Ba1hK8WJym1TgflF60OAoPnc6pJtsApgXUgZ3JldI71IsKwCx0usO2+6WCDFO2RxKQoMIxkcJtkPaU7GpeDrpahzZPFKS5bEqfU0lFlrnvo6YUpbh/ZT6ZbNWH0ARsRZ7XM0RRI+rUla2aLevj5rTu1/BwEqS8LE5L1MGysFbQc4eMLED0FxO3IpkpKjKVhwfN3Msa9rJTXAZtr+vkjUCcvr5QN4SA1mYsPK3ZZx5P18xYCTRyTL5uVTgsOQmc6RVr9Cj/9JpLWsm1DnvAFR5/WS8e62gk0NG1E48ScI1HQm17DU2c4ovPSwKSSzqgdkdvM8+S5PUlgvmA9UCOxoBZKBr3Qn7HtieyJyL+n9ch8RpYMBsrF06Vp9CaveQcgFAc1PBpdRuAjr8bWZ2+zEPko0UxOyH0p1FTFCaY949+EGnOteVBjHR1007IssfYD9Sr4oQ==",
+      "keyId" : "0123abcd0123abcd",
+      "kind" : "applications",
+      "plaintext" : "{\"gh:acme:1\":{\"created\":\"2026-11-16T11:33:40.000Z\",\"job\":{\"apply_url\":\"\",\"ats\":\"greenhouse\",\"ats_slug\":\"\",\"company\":\"Acme Ünited\",\"description\":\"\",\"id\":\"gh:acme:1\",\"location\":\"Zürich\",\"min_years\":3,\"posted\":\"2026-11-01\",\"tailor_note\":\"\",\"title\":\"Data Scientist\",\"url\":\"https://example.com/j/1\",\"variant\":\"\",\"visa\":\"\"},\"score\":0.81999999999999995,\"status\":\"tailoring\",\"updated\":\"2026-11-16T11:33:40.000Z\"}}",
+      "version" : 3
     }
   ],
   "keyring" : {
-    "blob" : "AanoB9RPlxegPbfJe8lbeJLFq+U0LPdEaq6VKdTwzh5KsbGsniJpe/dnaBB6/T2mSkMgDK0P1DIQO1x3k1aRGKglsnrBt+mgD7LszYY=",
+    "blob" : "AXWpRXauByfTR6dymMMFWZU3AwliXQwB3UOy80Bz07wBKcaIPmtOfaVuLgWg5MiSHFKB6I6myv0AyxbXbTnk//UxpZDKax9cFMBHYGs=",
     "ringId" : "rk-1",
     "version" : 1
   },

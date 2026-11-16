@@ -129,7 +129,8 @@ public final class Store: @unchecked Sendable {
 
     // MARK: key-value documents (profile, search, settings, caches)
 
-    public enum Key: String, Sendable { case profile, search, settings, atsCache = "ats_resolved", sponsorState = "sponsor_state", rankBrief = "rank_brief", sourceRuns = "source_runs", boardRegistry = "board_registry", linkChecks = "link_checks", skillPlan = "skill_plan", interviewPrep = "interview_prep", offers, contacts }
+    public enum Key: String, Sendable { case profile, search, settings, atsCache = "ats_resolved", sponsorState = "sponsor_state", rankBrief = "rank_brief", sourceRuns = "source_runs", boardRegistry = "board_registry", linkChecks = "link_checks", skillPlan = "skill_plan", interviewPrep = "interview_prep", offers, contacts,
+                                     syncState = "sync_state", syncRecords = "sync_records", syncBackups = "sync_backups" }
 
     /// An unreadable document is moved to `<key>.corrupt-<day>` (bytes kept) and reads as empty, so the app still opens.
     public func get<T: Decodable>(_ key: Key, as: T.Type = T.self) throws -> T? {
@@ -151,6 +152,8 @@ public final class Store: @unchecked Sendable {
         let data = try JSONCoding.encoder.encode(value)
         try db.write { db in try db.execute(sql: "INSERT OR REPLACE INTO kv(key, value) VALUES (?, ?)", arguments: [key.rawValue, data]) }
     }
+
+    public func delete(_ key: Key) throws { try db.write { try $0.execute(sql: "DELETE FROM kv WHERE key = ?", arguments: [key.rawValue]) } }
 
     public func profile() throws -> Profile { try get(.profile) ?? Profile() }
     public func search() throws -> SearchConfig { try get(.search) ?? SearchConfig() }

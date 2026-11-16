@@ -82,7 +82,15 @@ final class SyncCryptoTests: XCTestCase {
     func testSwiftVectors() throws {
         let dst = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures/sync/swift_sealed.json")
         if ProcessInfo.processInfo.environment["OFFERLANE_WRITE_GOLDEN"] == "1" {
-            let plain: [(String, Int, String)] = [("resumes", 2, #"{"name":"Zoë Example","label":"Café ☕️"}"#), ("settings", 1, "null")]
+            var plain: [(String, Int, String)] = [("resumes", 2, #"{"name":"Zoë Example","label":"Café ☕️"}"#), ("settings", 1, "null")]
+            // What the Mac Store really sends (StoreSyncLocal): the web must read these with its own decoders (syncVectors.test.ts).
+            let store = try Store(), local = StoreSyncLocal(store: store)
+            let g = (try JSONSerialization.jsonObject(with: Fixture.data("core/core_expected.json")) as! [String: Any])["inputs"] as! [String: Any]
+            try store.set(.profile, StoreSyncLocal.decode(g["profile"]) as Profile?)
+            var j = Job(company: "Acme Ünited", title: "Data Scientist", location: "Zürich", url: "https://example.com/j/1", id: "gh:acme:1")
+            j.ats = "greenhouse"; j.minYears = 3; j.posted = "2026-11-01"; j.localScore = 0.82; j.notes = "Mac-only"
+            try store.save(j); try store.transition("gh:acme:1", to: .tailoring, by: "test")
+            plain += [("profile", 4, SyncEngine.canon(try local.read("profile"))), ("applications", 3, SyncEngine.canon(try local.read("applications")))]
             let v = Vectors(recoveryKey: C.formatRecoveryKey(rk),
                             keyring: .init(version: 1, ringId: "rk-1", blob: try C.wrapAccountKey(ak, keyId: keyId, rk: rk, userId: u, version: 1, ringId: "rk-1").base64EncodedString()),
                             blobs: try plain.map { .init(kind: $0.0, version: $0.1, keyId: keyId, plaintext: $0.2,
