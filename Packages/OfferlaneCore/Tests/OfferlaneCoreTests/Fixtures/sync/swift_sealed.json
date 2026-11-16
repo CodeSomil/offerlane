@@ -1,0 +1,24 @@
+{
+  "blobs" : [
+    {
+      "blob" : "Aa68tUL5X5Nk0AXCu4Z2Sx0NSJ5igHh5oJ5UxExQYRPsVBt3B9s1fEmrdedOqRS6nRuzc0JNoYLxqjtVYxAIxKne+fqVVIRo3oUK",
+      "keyId" : "0123abcd0123abcd",
+      "kind" : "resumes",
+      "plaintext" : "{\"name\":\"Zoë Example\",\"label\":\"Café ☕️\"}",
+      "version" : 2
+    },
+    {
+      "blob" : "AQS38MJY7EvF6/7Bb6roKqFW7EyGsf+Zro3o4+C9VbF4",
+      "keyId" : "0123abcd0123abcd",
+      "kind" : "settings",
+      "plaintext" : "null",
+      "version" : 1
+    }
+  ],
+  "keyring" : {
+    "blob" : "AanoB9RPlxegPbfJe8lbeJLFq+U0LPdEaq6VKdTwzh5KsbGsniJpe/dnaBB6/T2mSkMgDK0P1DIQO1x3k1aRGKglsnrBt+mgD7LszYY=",
+    "ringId" : "rk-1",
+    "version" : 1
+  },
+  "recoveryKey" : "UCQ2-FI5E-UWTK-PKFJ-VKV2-ZLNO-V4"
+}

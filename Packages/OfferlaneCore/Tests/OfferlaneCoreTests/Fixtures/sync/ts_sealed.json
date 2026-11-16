@@ -1,0 +1,24 @@
+{
+  "recoveryKey": "UCQ2-FI5E-UWTK-PKFJ-VKV2-ZLNO-V4",
+  "keyring": {
+    "version": 1,
+    "ringId": "rk-1",
+    "blob": "AeLyPS1FAN6GC2kQ5toUOonHkE5wLwEqAr/0BiYH1NuGqB80VxMyafZfEWaI8VsMKx9tM/snIMg3VMWnwvtrXDdIqkRhgl/qeS6KKPA="
+  },
+  "blobs": [
+    {
+      "kind": "profile",
+      "version": 1,
+      "plaintext": "{\"name\":\"Zoë Example\",\"city\":\"Zürich 🇨🇭\"}",
+      "keyId": "0123abcd0123abcd",
+      "blob": "AVfSazbaPmSa1SnqWsl8wmeUvnY9mVQ/ON+olyB6FFbA77c+BdAcCQ527Swe6tEdMHNSwl90Qyr1t+KRLjO8dUCUB4FtN1PBZeKGjpbc"
+    },
+    {
+      "kind": "applications",
+      "version": 7,
+      "plaintext": "{\"gh:acme:1\":{\"status\":\"applied\",\"updated\":\"2026-11-16T10:00:00.000Z\"}}",
+      "keyId": "0123abcd0123abcd",
+      "blob": "AeXSNxcHB/dAHOsIi2Jk8cmy5nmh29ztwVUhERVs/a4AD1muP/ld804JtHaZP+e+CZbjRjFKcnzfLb6QzvZXpTV4E+KepgAB+bWIG5f5+BpbbAUyaVApmXh4OzEidCdxELTG6g=="
+    }
+  ]
+}
