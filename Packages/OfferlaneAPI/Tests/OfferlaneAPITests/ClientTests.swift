@@ -79,3 +79,46 @@ final class ClientTests: XCTestCase {
         XCTAssertEqual(limited.headers.retryAfter, "7")
     }
 }
+
+/// SyncHTTP (P4.4b): the wire the Mac sync engine uses.
+final class SyncHTTPTests: XCTestCase {
+    private final class Flaky: ClientTransport, @unchecked Sendable {
+        var sent: [HTTPRequest] = [], fails: Int
+        let status: HTTPResponse.Status, json: String
+        init(fails: Int, _ status: HTTPResponse.Status, _ json: String) { self.fails = fails; self.status = status; self.json = json }
+        func send(_ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String) async throws -> (HTTPResponse, HTTPBody?) {
+            sent.append(request)
+            if fails > 0 { fails -= 1; throw URLError(.networkConnectionLost) }
+            return (HTTPResponse(status: status, headerFields: [.contentType: "application/json", HTTPField.Name("etag")!: #""v4""#, HTTPField.Name("www-authenticate")!: "Bearer"]), HTTPBody(json))
+        }
+    }
+    private func sync(_ t: Flaky) -> SyncHTTP { SyncHTTP(client: .offerlane(serverURL: URL(string: "https://api.test")!, transport: t, token: { "tok" })) }
+
+    func testPutRetriesANetworkFailureWithTheSameIdempotencyKey() async throws {
+        let t = Flaky(fails: 2, .ok, #"{"version":4}"#)
+        let r = try await sync(t).put("profile", expected: 3, keyId: "k1", ciphertext: Data([1, 2]))
+        XCTAssertEqual(r, .ok(version: 4))
+        XCTAssertEqual(t.sent.count, 3)
+        let keys = Set(t.sent.map { $0.headerFields[HTTPField.Name("idempotency-key")!] })
+        XCTAssertEqual(keys.count, 1)
+        XCTAssertEqual(t.sent[0].headerFields[HTTPField.Name("if-match")!], #""v3""#)
+    }
+
+    func testCreateConflictMissingAndErrors() async throws {
+        let created = Flaky(fails: 0, .conflict, #"{"error":"conflict","version":1}"#)
+        let r = try await sync(created).put("keyring", expected: nil, keyId: "rk-1", ciphertext: Data([1]))
+        XCTAssertEqual(r, .conflict)
+        XCTAssertEqual(created.sent[0].headerFields[HTTPField.Name("if-none-match")!], "*")
+        let missing = try await sync(Flaky(fails: 0, .notFound, #"{"error":"not_found"}"#)).get("profile")
+        XCTAssertNil(missing)
+        let got = try await sync(Flaky(fails: 0, .ok, #"{"version":2,"keyId":"k1","ciphertext":"AQI="}"#)).get("resumes")
+        XCTAssertEqual(got?.ciphertext, Data([1, 2]))
+        do { _ = try await sync(Flaky(fails: 0, .unauthorized, #"{"error":"unauthorized"}"#)).me(); XCTFail() }
+        catch let e as SyncHTTP.Failure { XCTAssertTrue(e.message.contains("expired")) }
+        do { _ = try await sync(Flaky(fails: 3, .ok, "{}")).put("profile", expected: 1, keyId: "k", ciphertext: Data()); XCTFail() }
+        catch let e as SyncHTTP.Failure { XCTAssertEqual(e, SyncHTTP.offline) }
+        do { _ = try await sync(Flaky(fails: 0, .ok, "{}")).get("nope"); XCTFail() } catch {}
+        do { _ = try await sync(Flaky(fails: 0, .ok, "{}")).get("profile"); XCTFail() }
+        catch let e as SyncHTTP.Failure { XCTAssertEqual(e, SyncHTTP.unreadable, "a bad answer is not 'offline'") }
+    }
+}
