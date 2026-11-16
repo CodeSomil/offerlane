@@ -8,6 +8,7 @@ import { askJSON, readyAI } from "./ai.js";
 import { loadProfile, loadResume } from "./data.js";
 import { download, guardAIPlan, resumeMarkdown } from "./draft.js";
 import { loadSaved, MoveError, saveDraft, setStatus, type Saved } from "./jobs.js";
+import { OUTGOING, Ready } from "./Ready.js";
 
 const isObject = (v: unknown) => v !== null && typeof v === "object" && !Array.isArray(v);
 const storageError = (err: unknown) => (err instanceof MoveError ? err.message : "This browser wouldn't store it. Allow site storage and try again.");
@@ -26,7 +27,7 @@ export function Review() {
 
   if (!saved) return <p className="muted">Loading…</p>;
   const all = Object.values(saved).sort((a, b) => b.updated.localeCompare(a.updated));
-  const todo = all.filter((s) => s.status === "tailoring"), drafts = all.filter((s) => s.status === "review");
+  const todo = all.filter((s) => s.status === "tailoring"), drafts = all.filter((s) => s.status === "review"), out = all.filter((s) => OUTGOING.includes(s.status));
   const current = open ? saved[open] : undefined;
   const status = <p role={msg && !msg.ok ? "alert" : "status"} className={msg ? (msg.ok ? "muted" : "bad") : undefined}>{msg?.text}</p>;
   if (!resume || !prof) return <p className="card">Add your resume first (<a href="#/resumes">Profile → Resumes</a>); tailoring uses only the facts in it.</p>;
@@ -54,6 +55,7 @@ export function Review() {
   return (
     <div className="stack">
       {status}
+      <Ready roles={out} profile={prof} stored={setSaved} say={setMsg} />
       <section className="card" aria-labelledby="r-drafts">
         <h2 id="r-drafts">Ready for your review <span className="muted">{drafts.length}</span></h2>
         {drafts.length === 0 ? <p className="muted">No drafts yet.</p> : (

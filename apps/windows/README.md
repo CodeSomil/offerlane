@@ -18,7 +18,7 @@ cargo build --locked --features tauri/custom-protocol
 ./target/debug/offerlane.exe --selftest
 ```
 
-`--selftest` prints 14 `PASS`/`FAIL` apply lines, then the Credential Manager line, then three shell security lines (no IPC from a career page, no file://, no tauri.localhost), then `SELFTEST PASSED 18/18`. It exits non-zero if any check fails. The CI job `spike-windows` runs exactly these steps.
+`--selftest` prints 14 `PASS`/`FAIL` apply lines, then the Credential Manager line, then three shell security lines (no IPC from a career page, no file://, no tauri.localhost), then the app's own "Fill in application" path filling a form without submitting it, then `SELFTEST PASSED 19/19`. It exits non-zero if any check fails. The CI job `spike-windows` runs exactly these steps.
 
 ## On the Mac
 

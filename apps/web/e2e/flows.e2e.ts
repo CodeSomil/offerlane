@@ -158,6 +158,26 @@ test("Pipeline: stages, stale hint, next steps, move by menu and by drag, rememb
   await expect(page.getByText("Analyst", { exact: true })).toHaveCount(0);
 });
 
+test("Review: ready roles; a browser offers no filling, and \"I've submitted it\" puts a role on the board", async ({ page }) => {
+  const r1 = app("r1", "Ready Role", "ready", 1);
+  r1[1].job.url = "https://jobs.example.com/r1";
+  await seed(page, { ...me, applications: Object.fromEntries([r1, app("r2", "Half Done", "prefilled", 0), app("r3", "Still Tailoring", "tailoring", 0)]) });
+  await page.goto("/#/review");
+  const ready = page.getByRole("region", { name: /^Ready to apply/ });
+  await expect(ready.getByRole("listitem")).toHaveCount(2);
+  await expect(ready.getByRole("listitem").filter({ hasText: "Half Done" })).toContainText("Ready to submit");
+  await expect(page.getByRole("button", { name: /^Fill in/ })).toHaveCount(0);  // only the Windows app fills forms
+  await expect(ready).toContainText("browser extension");
+  await expect(ready.getByRole("link", { name: "Open the posting for Ready Role at Co r1" })).toHaveAttribute("target", "_blank");
+  await axeBoth(page);
+
+  await ready.getByRole("button", { name: "I've submitted it: Ready Role at Co r1" }).click();
+  await expect(page.getByRole("status")).toHaveText("Moved Ready Role at Co r1 to Applied.");
+  await expect(ready.getByRole("listitem")).toHaveCount(1);
+  await page.goto("/#/applications");
+  await expect(page.getByRole("region", { name: /^Applied \d/ })).toContainText("Ready Role");
+});
+
 test("Pipeline: empty state points to Discover", async ({ page }) => {
   await page.goto("/#/applications");
   await expect(page.getByRole("link", { name: "Discover" }).last()).toHaveAttribute("href", "#/find");

@@ -2,9 +2,10 @@
 // Credential Manager round-trip and the 3 shell security checks (bridge.ts shellChecks), and reports to the Rust side, which prints the lines and sets the exit code.
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { applySelfTest, cdpPage } from "@offerlane/core";
+import { applySelfTest, cdpPage, job, newProfile } from "@offerlane/core";
 import autofill from "../../../App/Resources/autofill.js?raw";
-import { cdpBridge, credentialRoundTrip, CredentialVault, shellChecks, type ShellPage } from "./bridge.js";
+import { shellFill } from "./apply.js";
+import { cdpBridge, credentialRoundTrip, CredentialVault, memoryApprovals, shellChecks, type ShellPage } from "./bridge.js";
 
 let status: HTMLElement, out: HTMLElement;
 // Lines go out in order and are all delivered before selftest_done exits the process.
@@ -29,8 +30,10 @@ async function selftest(base: string) {
     const rt = await credentialRoundTrip(invoke);
     await current?.close(); current = await bridge.open();
     const shell = await shellChecks(current, base);
-    for (const c of [rt, ...shell]) log((c.ok ? "PASS " : "FAIL ") + c.what);
-    const all = [...results, rt, ...shell];
+    await current.close(); current = undefined;
+    const fills = [await noSubmit(base)];
+    for (const c of [rt, ...shell, ...fills]) log((c.ok ? "PASS " : "FAIL ") + c.what);
+    const all = [...results, rt, ...shell, ...fills];
     total = results.length === 14 ? all.length : 0; // a short list is a failure, not a pass
     passed = all.filter((r) => r.ok).length;
   } catch (e) {
@@ -42,6 +45,22 @@ async function selftest(base: string) {
   status.textContent = `Self-test: ${passed}/${total}`;
   await sent;
   await invoke("selftest_done", { passed, total });
+}
+
+/** Check 19: the app's own "Fill in application" path (platform.fill) fills the form and leaves Submit to the human. */
+async function noSubmit(base: string) {
+  const what = "Fill in application (the app's button) fills the form and never submits";
+  const f = shellFill(invoke, listen, memoryApprovals(), autofill, undefined);
+  try {
+    const me = newProfile();
+    Object.assign(me.personal, { first_name: "Test", last_name: "Person", full_name: "Test Person", email: "test@example.com" });
+    const r = await f.fill(job({ company: "Globex", title: "Data Scientist", location: "", url: `${base}/simple.html` }), me, [], false);
+    await new Promise((ok) => setTimeout(ok, 1500));  // a submit would replace the form with "Thank you for applying!"
+    const left = await f.page()!.eval("document.forms.length === 1 && fn.value === 'Test' && !document.body.innerText.includes('Thank you')");
+    return { ok: r.kind === "prefilled" && left === true, what: `${what} (${r.message})` };
+  } catch (e) {
+    return { ok: false, what: `${what} (${e instanceof Error ? e.message : String(e)})` };
+  } finally { await f.close().catch(() => {}); }
 }
 
 const base = (await invoke("selftest_base")) as string | null;
