@@ -26,6 +26,16 @@ describe("shell CSP", () => {
   });
 });
 
+describe("installer", () => {
+  it("is an unsigned per-user NSIS build (signing waits on a certificate: a human blocker)", () => {
+    expect(conf.bundle.active).toBe(true);
+    expect(conf.bundle.targets).toEqual(["nsis"]);
+    expect(conf.bundle.windows.nsis.installMode).toBe("currentUser");
+    expect(conf.bundle.windows.certificateThumbprint ?? null).toBeNull();
+    expect(conf.bundle.windows.signCommand ?? null).toBeNull();
+  });
+});
+
 describe("main window sign-in origin", () => {
   it("matches the web's issuer", () => {
     const nav = readFileSync(new URL("../src-tauri/src/nav.rs", import.meta.url), "utf8");

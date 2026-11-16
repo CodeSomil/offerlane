@@ -88,9 +88,15 @@ jobs:
       - name: Rust tests (incl. the Credential Manager round-trip)
         working-directory: apps/windows/src-tauri
         run: cargo test --locked
-      - name: Build the shell (release build: devtools off, GUI subsystem, as shipped)
-        working-directory: apps/windows/src-tauri
-        run: cargo build --release --locked --features tauri/custom-protocol
-      - name: Apply self-test on WebView2
+      - name: Build the app and its installer (release, devtools off, as shipped; unsigned until a certificate exists)
+        working-directory: apps/windows
+        run: npx -y pnpm@11.28.9 -s tauri build --bundles nsis -- --locked
+      - name: Apply self-test on WebView2 (the same release exe the installer ships)
         working-directory: apps/windows/src-tauri
         run: timeout 900 ./target/release/offerlane.exe --selftest
+      - name: Upload the unsigned installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: offerlane-windows-unsigned
+          path: apps/windows/src-tauri/target/release/bundle/nsis/*-setup.exe
+          if-no-files-found: error

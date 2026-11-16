@@ -16,10 +16,23 @@
     }
   },
   "bundle": {
-    "active": false,
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
     "icon": [
       "icons/icon.ico",
       "icons/128x128.png"
-    ]
+    ],
+    "publisher": "Offerlane",
+    "shortDescription": "Offerlane",
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      },
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
+    }
   }
 }
