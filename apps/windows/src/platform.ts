@@ -14,4 +14,9 @@ const approvals: Approvals = {
   set: async (host, company) => { await updateItem(KEY, (old) => ({ ...table(old), [host]: company })); },
 };
 
-export const platform: Platform = { name: "windows", secrets: credentialSecrets(invoke), fill: shellFill(invoke, listen, approvals, autofill).fill };
+export const platform: Platform = {
+  name: "windows",
+  secrets: credentialSecrets(invoke),
+  fill: shellFill(invoke, listen, approvals, autofill).fill,
+  notify: async (title, body) => { await invoke("notify", { title, body }); },
+};

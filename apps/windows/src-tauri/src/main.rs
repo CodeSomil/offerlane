@@ -7,11 +7,14 @@
 mod apply;
 mod nav;
 mod serve;
+mod toast;
 mod vault;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
-use tauri::{webview::NewWindowResponse, AppHandle, Webview, WebviewUrl, WebviewWindowBuilder};
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::TrayIconBuilder;
+use tauri::{webview::NewWindowResponse, AppHandle, Manager, Webview, WebviewUrl, WebviewWindowBuilder};
 use vault::Account;
 
 struct SelfTest { base: Option<String> }
@@ -90,14 +93,37 @@ fn secret_delete(webview: Webview, name: String) -> Result<(), String> {
     vault::secret_delete(&name)
 }
 
+/// A sync command: it runs on the main thread, where WinRT's apartment is already set up.
+#[tauri::command]
+fn notify(webview: Webview, title: String, body: String) -> Result<(), String> {
+    apply::main_only(&webview)?;
+    toast::show(&title, &body)
+}
+
+fn show_main(app: &AppHandle) {
+    if let Some(w) = app.get_webview_window("main") { let _ = w.unminimize(); let _ = w.show(); let _ = w.set_focus(); }
+}
+
+/// The tray icon: Open brings the window back, Quit ends the app.
+fn tray(app: &tauri::App) -> tauri::Result<()> {
+    let open = MenuItem::with_id(app, "open", "Open Offerlane", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit Offerlane", true, None::<&str>)?;
+    let mut b = TrayIconBuilder::with_id("main").tooltip("Offerlane").menu(&Menu::with_items(app, &[&open, &quit])?)
+        .on_menu_event(|app, e| match e.id.as_ref() { "open" => show_main(app), "quit" => app.exit(0), _ => {} });
+    if let Some(i) = app.default_window_icon() { b = b.icon(i.clone()); }
+    b.build(app)?;
+    Ok(())
+}
+
 fn main() {
     let selftest = std::env::args().skip(1).any(|a| a == "--selftest");
     if selftest { console_for_selftest(); }
+    toast::set_app_id();
     let base = selftest.then(|| serve::start().expect("could not start the self-test server on 127.0.0.1"));
     tauri::Builder::default()
         .manage(SelfTest { base })
         .invoke_handler(tauri::generate_handler![
-            selftest_base, selftest_log, selftest_done, vault_read, vault_save, vault_delete, secret_read, secret_save, secret_delete,
+            selftest_base, selftest_log, selftest_done, vault_read, vault_save, vault_delete, secret_read, secret_save, secret_delete, notify,
             apply::open_page, apply::close_page, apply::cdp_send
         ])
         .setup(move |app| {
@@ -121,6 +147,7 @@ fn main() {
                 });
             } else {
                 apply::clean_temp(app.handle());
+                tray(app)?;
             }
             Ok(())
         })

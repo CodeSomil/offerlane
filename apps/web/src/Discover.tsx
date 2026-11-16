@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { parsePay, type Profile, type ResumeVersion } from "@offerlane/core";
 import { loadProfile, loadResume } from "./data.js";
+import { notify } from "./notify.js";
 import { JobsError, loadSaved, MoveError, payLabel, rank, searchJobs, setStatus, toJob, VISA_LABEL, type Match, type Saved } from "./jobs.js";
 
 export function Discover() {
@@ -26,6 +27,7 @@ export function Discover() {
     try {
       const m = rank((await searchJobs(q.trim())).map(toJob), me.r.content, me.p);
       setMatches(m); setStatus_({ ok: true, text: m.length === 0 ? "No jobs found. Try a broader title." : `${m.length} jobs, best match first.` });
+      if (m.length > 0) notify("New matches", `${m.length} ${q.trim()} jobs, best match first.`);
     } catch (err) { setMatches(undefined); setStatus_({ ok: false, text: err instanceof JobsError ? err.message : "The search failed." }); }
     setBusy(false);
   }

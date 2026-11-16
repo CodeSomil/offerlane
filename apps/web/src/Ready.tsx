@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { canMove, parseAnswers, STATUS_TITLE, type JobStatus, type OutcomeKind, type Profile } from "@offerlane/core";
 import { MoveError, setStatus, type Saved } from "./jobs.js";
+import { notify } from "./notify.js";
 import { platform } from "./platform.js";
 
 export const OUTGOING: readonly string[] = ["ready", "applying", "account", "needs_you", "prefilled"];
@@ -35,6 +36,7 @@ export function Ready({ roles, profile, stored, say }: { roles: Saved[]; profile
       const r = await fill(s.job, profile, parseAnswers(s.answers ?? ""), approve);
       stored((await advance({ ...s, status: "applying" }, [AFTER[r.kind]]))!);
       say({ ok: r.kind !== "needsYou", text: r.message });
+      notify(`${s.job.company}: ${r.kind === "prefilled" ? "ready for you to submit" : "needs you"}`, r.message);
     } catch (err) { fail(err); }
     setBusy(false);
   }

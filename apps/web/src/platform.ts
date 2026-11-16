@@ -9,5 +9,7 @@ export type Platform = {
   /** Fill this role's application in an apply window and stop before Submit (the shell only). `approve`: the human allowed
    *  an account for this company. */
   fill?: (job: Job, profile: Profile, answers: Answer[], approve: boolean) => Promise<Outcome>;
+  /** A system notification (use notify.ts, which only shows it while the app is in the background). */
+  notify?: (title: string, body: string) => Promise<void>;
 };
 export const platform: Platform = { name: "web" };
