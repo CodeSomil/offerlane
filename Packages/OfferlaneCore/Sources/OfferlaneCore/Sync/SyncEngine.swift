@@ -151,11 +151,44 @@ public struct SyncEngine: Sendable {
     }
 
     static func empty(_ v: Any?) -> Bool { v == nil || v is NSNull }
-    /// One spelling per value (sorted keys), used for equality, digests and what goes on the wire; the web keeps a parsed
-    /// value's key order, so it doesn't push back what it just pulled.
-    static func canon(_ v: Any?) -> String {
-        let data = try? JSONSerialization.data(withJSONObject: v ?? NSNull(), options: [.sortedKeys, .withoutEscapingSlashes, .fragmentsAllowed])
-        return data.map { String(decoding: $0, as: UTF8.self) } ?? "null"
+    /// One spelling per value: JavaScript's JSON.stringify with sorted keys (libs/core sync.ts canonJSON), so both ports agree on
+    /// the merge tie-break and the web doesn't push back what it just pulled. Used for equality, digests and what goes on the wire.
+    /// Not JSONSerialization: it writes 0.82 as 0.81999999999999995.
+    public static func canon(_ v: Any?) -> String {
+        switch v {
+        case nil, is NSNull: return "null"
+        case let s as String: return quote(s)
+        case let n as NSNumber:
+            if CFGetTypeID(n) == CFBooleanGetTypeID() { return n.boolValue ? "true" : "false" }
+            let d = n.doubleValue
+            guard d.isFinite else { return "null" }
+            if d == d.rounded(), abs(d) < 1e21 { return String(format: "%.0f", d) == "-0" ? "0" : String(format: "%.0f", d) }
+            // shortcut: JS writes 1e-5..1e-7 in plain decimals where Swift uses exponents; fine for scores and years, revisit for tiny values.
+            return "\(d)".replacingOccurrences(of: "e-0", with: "e-").replacingOccurrences(of: "e+0", with: "e+")
+        case let a as [Any]: return "[" + a.map { canon($0) }.joined(separator: ",") + "]"
+        case let o as [String: Any]:
+            // Sorted by UTF-16 code units, like JavaScript's default sort.
+            let keys = o.keys.sorted { $0.utf16.lexicographicallyPrecedes($1.utf16) }
+            return "{" + keys.map { quote($0) + ":" + canon(o[$0]) }.joined(separator: ",") + "}"
+        default: return "null"
+        }
+    }
+    static func quote(_ s: String) -> String {
+        var out = "\""
+        for c in s.unicodeScalars {  // a Swift String has no lone surrogates, so scalars cover what JSON.stringify escapes
+            switch c.value {
+            case 0x22: out += "\\\""
+            case 0x5C: out += "\\\\"
+            case 0x08: out += "\\b"
+            case 0x0C: out += "\\f"
+            case 0x0A: out += "\\n"
+            case 0x0D: out += "\\r"
+            case 0x09: out += "\\t"
+            case 0..<0x20: out += String(format: "\\u%04x", c.value)
+            default: out.unicodeScalars.append(c)
+            }
+        }
+        return out + "\""
     }
     static func digest(_ s: String) -> String { Data(SHA256.hash(data: Data(s.utf8))).base64EncodedString() }
 }

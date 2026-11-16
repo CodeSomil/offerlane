@@ -12,7 +12,8 @@ public final class StoreSyncLocal: SyncLocal, @unchecked Sendable {  // only a `
     public init(store: Store) { self.store = store }
 
     /// What sync last stored per synced job: the record as it was (so keys the Mac doesn't model, like plan/answers, survive and
-    /// go back out verbatim) and the job's local `updated` at that moment (unchanged since → the record is sent back as it was).
+    /// go back out verbatim) and a fingerprint of the job then (shared fields + status + local `updated`; unchanged since →
+    /// the record is sent back as it was). Not `updated` alone: Mac times have whole seconds, so an edit in the same second would hide.
     /// An array, not an id-keyed map: the Store's snake_case coder would rewrite dictionary keys.
     struct Record: Codable { var id: String; var json: String; var stamp: String }
     struct Backup: Codable { var kind: String; var saved: String; var json: String }
@@ -71,7 +72,7 @@ public final class StoreSyncLocal: SyncLocal, @unchecked Sendable {  // only a `
         var out: [String: Any] = [:]
         for j in try store.jobs() where j.status != .found || byId[j.id] != nil {
             let r = byId[j.id]
-            if let r, r.stamp == j.updated, let same = Self.parse(r.json) { out[j.id] = same; continue }
+            if let r, r.stamp == Self.fingerprint(j), let same = Self.parse(r.json) { out[j.id] = same; continue }
             var rec = (r.flatMap { Self.parse($0.json) } as? [String: Any] ?? [:]).filter { !Self.macOwned.contains($0.key) }
             rec["job"] = Self.wireJob(j)
             rec["status"] = j.status.rawValue
@@ -107,13 +108,15 @@ public final class StoreSyncLocal: SyncLocal, @unchecked Sendable {  // only a `
                 if status.isHidden { j.stripForHiding() }
                 try store.save(j)
                 if old != status { try store.addEvent(id, status: status.rawValue, source: "sync", detail: "") }
-                stamp = j.updated
+                stamp = Self.fingerprint(j)
             }
             records.removeAll { $0.id == id }
             records.append(.init(id: id, json: SyncEngine.canon(rec), stamp: stamp))
         }
         try store.set(.syncRecords, records)
     }
+
+    static func fingerprint(_ j: Job) -> String { SyncEngine.canon([wireJob(j), j.status.rawValue, j.updated, j.score] as [Any]) }
 
     /// libs/core models.ts `Job`: the fields every client has.
     static func wireJob(_ j: Job) -> [String: Any] {

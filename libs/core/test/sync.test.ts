@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SYNC_KINDS, SyncCryptoError, formatRecoveryKey, importAccountKey, makeAccountKey, makeKeyId, makeRecoveryKey, mergeRecords, openBlob, parseRecoveryKey,
+import { SYNC_KINDS, SyncCryptoError, canonJSON, formatRecoveryKey, importAccountKey, makeAccountKey, makeKeyId, makeRecoveryKey, mergeRecords, openBlob, parseRecoveryKey,
   sealBlob, syncAAD, unwrapAccountKey, wrapAccountKey } from "../src/sync.js";
 
 const enc = new TextEncoder(), dec = new TextDecoder();
@@ -78,10 +78,12 @@ describe("sync crypto (docs/v4/SYNC_CRYPTO.md)", () => {
     await expect(unwrapAccountKey(ring, rk, u, 2, "rk-1")).rejects.toBeInstanceOf(SyncCryptoError);
   });
 
-  it("merges record maps: union by id, the newer `updated` wins, local wins a tie", () => {
+  it("merges record maps: union by id, the newer `updated` wins, a tie goes to the greater canonical JSON on every device", () => {
     const local = { a: { updated: "2026-11-10T00:00:00.000Z", v: "L" }, b: { updated: "2026-11-12T00:00:00.000Z", v: "L" }, c: { updated: "2026-11-01T00:00:00.000Z", v: "L" } };
     const remote = { a: { updated: "2026-11-11T00:00:00.000Z", v: "R" }, b: { updated: "2026-11-11T00:00:00.000Z", v: "R" }, c: { updated: "2026-11-01T00:00:00.000Z", v: "R" }, d: { updated: "", v: "R" } };
-    expect(mergeRecords(local, remote)).toEqual({ a: remote.a, b: local.b, c: local.c, d: remote.d });
+    expect(mergeRecords(local, remote)).toEqual({ a: remote.a, b: local.b, c: remote.c, d: remote.d });
+    expect(mergeRecords(remote, local)).toEqual(mergeRecords(local, remote)); // both devices agree
+    expect(canonJSON({ b: [1, { d: "é", c: null }], a: 0.82 })).toBe('{"a":0.82,"b":[1,{"c":null,"d":"é"}]}');
     expect(mergeRecords(undefined, remote)).toEqual(remote);
     expect(mergeRecords(local, "not a map")).toEqual(local);
   });

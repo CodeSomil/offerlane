@@ -34,3 +34,9 @@ User id, kind names, versions, sizes, timestamps, key ids. Kind names are a fixe
 - Rotate: make a new AK + key id, re-encrypt every kind, re-wrap the keyring. Keep the old AK locally until every blob is moved.
 - New RK: re-wrap the keyring with the new KEK (and rotate the AK, since the old RK may have leaked).
 - Lost every device AND the RK: the synced data is gone. The UI must say so plainly when it shows the RK (P3/Mac wiring).
+
+## Clients and merge (P4.4)
+- Ports: web/Windows `libs/core/src/sync.ts` + `apps/web/src/sync.ts`; Mac `OfferlaneCore/Sync` (CryptoKit). `Fixtures/sync/{ts,swift}_sealed.json`: each port opens the other's blobs.
+- Plaintext is JSON. Records (`applications`): union by id, newer ISO `updated` wins; on a tie the greater canonical JSON (sorted keys,
+  JSON.stringify spelling) wins, so every device picks the same record. Whole kinds (`profile`, `resumes`): last writer wins, the replaced value is kept locally.
+- The Mac syncs `profile`, its default resume as `resumes`, and acted-on jobs as `applications` (times in UTC on the wire); its own extra fields stay on the Mac.

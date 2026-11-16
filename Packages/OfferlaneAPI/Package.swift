@@ -11,6 +11,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-openapi-runtime", exact: "1.13.3"),
         .package(url: "https://github.com/apple/swift-openapi-urlsession", exact: "1.4.0"),
         .package(url: "https://github.com/apple/swift-http-types", exact: "1.8.0"), // already a runtime dependency; named for the middleware
+        .package(path: "../OfferlaneCore"), // tests only: the live sync check (SyncLiveTests)
     ],
     targets: [
         .target(name: "OfferlaneAPI", dependencies: [
@@ -20,6 +21,7 @@ let package = Package(
         ], plugins: [.plugin(name: "OpenAPIGenerator", package: "swift-openapi-generator")]),
         .testTarget(name: "OfferlaneAPITests", dependencies: [
             "OfferlaneAPI",
+            .product(name: "OfferlaneCore", package: "OfferlaneCore"),
             .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
             .product(name: "HTTPTypes", package: "swift-http-types"),
         ]),

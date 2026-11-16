@@ -87,11 +87,19 @@ public enum SyncCrypto {
         return (SymmetricKey(data: raw.prefix(32)), keyId)
     }
 
-    /// Record maps (applications): union by id; the newer ISO `updated` wins, local wins a tie. Records are never deleted.
+    /// Record maps (applications): union by id; the newer ISO `updated` wins. On a tie the greater canonical JSON wins, so every
+    /// device picks the same record (libs/core sync.ts mergeRecords, same rule). Records are never deleted.
     public static func mergeRecords(local: Any?, remote: Any?) -> [String: Any] {
         var out = remote as? [String: Any] ?? [:]
         let stamp = { (v: Any?) in (v as? [String: Any])?["updated"] as? String ?? "" }
-        for (id, l) in local as? [String: Any] ?? [:] where out[id] == nil || stamp(l) >= stamp(out[id]) { out[id] = l }
+        for (id, l) in local as? [String: Any] ?? [:] {
+            guard let r = out[id] else { out[id] = l; continue }
+            let a = stamp(l), b = stamp(r)
+            // Compare as UTF-16 like JavaScript's `>`, so both ports agree on the order.
+            if a.utf16.lexicographicallyPrecedes(b.utf16) { continue }
+            if a == b, !SyncEngine.canon(r).utf16.lexicographicallyPrecedes(SyncEngine.canon(l).utf16) { continue }
+            out[id] = l
+        }
         return out
     }
 }

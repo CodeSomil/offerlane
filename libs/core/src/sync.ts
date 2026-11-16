@@ -90,9 +90,19 @@ export async function unwrapAccountKey(ring: Bytes, rk: Bytes, userId: string, v
 
 const isMap = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === "object" && !Array.isArray(v);
 const stamp = (v: unknown) => (isMap(v) && typeof v.updated === "string" ? v.updated : "");
-/** Record maps (applications): union by id; the newer ISO `updated` wins, local wins a tie. Records are never deleted. */
+/** JSON with sorted keys: one spelling per value, the same the Mac writes (Swift SyncEngine.canon), for the merge tie-break. */
+export const canonJSON = (v: unknown): string =>
+  Array.isArray(v) ? `[${v.map(canonJSON).join(",")}]`
+    : isMap(v) ? `{${Object.keys(v).filter((k) => v[k] !== undefined).sort().map((k) => `${JSON.stringify(k)}:${canonJSON(v[k])}`).join(",")}}`
+      : JSON.stringify(v ?? null);
+/** Record maps (applications): union by id; the newer ISO `updated` wins. On a tie the greater canonical JSON wins, so every
+ *  device picks the same record (a "local wins" tie made two devices that edited in the same second swap forever). Never deleted. */
 export function mergeRecords(local: unknown, remote: unknown): Record<string, unknown> {
   const out: Record<string, unknown> = isMap(remote) ? { ...remote } : {};
-  if (isMap(local)) for (const [id, l] of Object.entries(local)) if (!(id in out) || stamp(l) >= stamp(out[id])) out[id] = l;
+  if (isMap(local)) for (const [id, l] of Object.entries(local)) {
+    if (!(id in out)) { out[id] = l; continue; }
+    const a = stamp(l), b = stamp(out[id]);
+    if (a > b || (a === b && canonJSON(l) > canonJSON(out[id]))) out[id] = l;
+  }
   return out;
 }

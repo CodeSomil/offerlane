@@ -54,6 +54,17 @@ final class SyncMappingTests: XCTestCase {
         XCTAssertTrue((out["updated"] as! String).hasSuffix("Z"))
     }
 
+    /// Found live (P4.4e): Mac times have whole seconds, so an edit in the same second as the pull must still go out.
+    func testAnEditInTheSameSecondAsThePullStillGoesOut() throws {
+        let store = try Store(), local = StoreSyncLocal(store: store), g = try golden()
+        var job = g["job"] as! [String: Any]; job["id"] = "gh:acme:2"
+        let now = StoreSyncLocal.utc(Dates.now())
+        _ = try local.update("applications") { _ in ["gh:acme:2": ["job": job, "status": "review", "score": 1, "created": now, "updated": now] as [String: Any]] }
+        _ = try store.update("gh:acme:2") { $0.location = "Berlin" }  // same second, almost surely
+        let out = (try local.read("applications") as? [String: Any])?["gh:acme:2"] as? [String: Any]
+        XCTAssertEqual((out?["job"] as? [String: Any])?["location"] as? String, "Berlin")
+    }
+
     func testOnlyActedOnJobsAndUnknownRecordsPassThrough() throws {
         let store = try Store(), local = StoreSyncLocal(store: store)
         try store.upsert(Job(company: "Found", title: "Match", id: "found-1"))

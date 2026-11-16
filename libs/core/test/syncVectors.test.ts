@@ -3,7 +3,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { job, profile } from "../src/models.js";
-import { formatRecoveryKey, importAccountKey, openBlob, sealBlob, syncAAD, unwrapAccountKey, wrapAccountKey, type SyncKind } from "../src/sync.js";
+import { canonJSON, formatRecoveryKey, importAccountKey, openBlob, sealBlob, syncAAD, unwrapAccountKey, wrapAccountKey, type SyncKind } from "../src/sync.js";
 
 const FX = new URL("../../../Packages/OfferlaneCore/Tests/OfferlaneCoreTests/Fixtures/sync/", import.meta.url);
 const userId = "user-1", keyId = "0123abcd0123abcd";
@@ -40,6 +40,8 @@ describe("sync vectors shared with Swift", () => {
     const of = (k: SyncKind) => JSON.parse(v.blobs.find((b) => b.kind === k)!.plaintext);
     const p = of("profile");
     expect(profile(p)).toEqual(p);
+    for (const k of ["profile", "applications"] as const) // Swift's canonical text is TS's too (the merge tie-break needs one spelling)
+      expect(canonJSON(of(k))).toBe(v.blobs.find((b) => b.kind === k)!.plaintext);
     const apps = of("applications") as Record<string, { job: unknown; status: string; score: number; created: string; updated: string }>;
     expect(Object.keys(apps)).toEqual(["gh:acme:1"]);
     const rec = apps["gh:acme:1"]!;

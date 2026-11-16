@@ -66,7 +66,11 @@ final class SyncCryptoTests: XCTestCase {
         let local: [String: Any] = ["a": ["updated": "2026-11-10T00:00:00.000Z", "v": "L"], "b": ["updated": "2026-11-12T00:00:00.000Z", "v": "L"], "c": ["updated": "2026-11-01T00:00:00.000Z", "v": "L"]]
         let remote: [String: Any] = ["a": ["updated": "2026-11-11T00:00:00.000Z", "v": "R"], "b": ["updated": "2026-11-11T00:00:00.000Z", "v": "R"], "c": ["updated": "2026-11-01T00:00:00.000Z", "v": "R"], "d": ["updated": "", "v": "R"]]
         let m = C.mergeRecords(local: local, remote: remote)
-        XCTAssertEqual(m.mapValues { ($0 as! [String: String])["v"]! }, ["a": "R", "b": "L", "c": "L", "d": "R"])
+        XCTAssertEqual(m.mapValues { ($0 as! [String: String])["v"]! }, ["a": "R", "b": "L", "c": "R", "d": "R"])
+        XCTAssertEqual(SyncEngine.canon(C.mergeRecords(local: remote, remote: local)), SyncEngine.canon(m), "both devices agree on a tie")
+        XCTAssertEqual(SyncEngine.canon(["b": [1, ["d": "é", "c": NSNull()]], "a": 0.82] as [String: Any]), #"{"a":0.82,"b":[1,{"c":null,"d":"é"}]}"#)
+        // JSON.stringify's spellings (checked in node): -0 → 0, 3.0 → 3, 1e21 → 1e+21, escapes, booleans.
+        XCTAssertEqual(SyncEngine.canon([-0.0, 3.0, 1e21, 2.5, true, "a\"b\\c\n\u{1}é"] as [Any]), #"[0,3,1e+21,2.5,true,"a\"b\\c\n\u0001é"]"#)
         XCTAssertEqual(C.mergeRecords(local: nil, remote: remote).count, 4)
         XCTAssertEqual(C.mergeRecords(local: local, remote: "not a map").count, 3)
     }
