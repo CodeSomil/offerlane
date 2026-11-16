@@ -1,7 +1,7 @@
 // Offerlane for Windows, v4 P4.2 spike: a Tauri 2 shell whose web side (apps/windows/src) runs libs/core's apply engine.
 // `offerlane --selftest` serves the mock career sites, runs the 14 apply checks, a Credential Manager round-trip and 3 shell security checks,
 // prints PASS/FAIL lines and exits 0 only when every one passes.
-// SHORTCUT: release builds use the GUI subsystem, so --selftest output shows only from a debug build (CI uses one); P4.3 decides.
+// Release builds use the GUI subsystem; with --selftest they write to a redirected stdout or borrow the parent's console.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod apply;
@@ -60,8 +60,21 @@ fn vault_delete(webview: Webview, host: String) -> Result<(), String> {
     vault::delete(&host)
 }
 
+/// A GUI-subsystem exe starts without a console. A redirected stdout (a CI pipe) already works; otherwise use the parent's.
+#[cfg(all(windows, not(debug_assertions)))]
+fn console_for_selftest() {
+    use windows::Win32::System::Console::{AttachConsole, GetStdHandle, ATTACH_PARENT_PROCESS, STD_OUTPUT_HANDLE};
+    // SAFETY: plain Win32 calls with no pointers; failure just leaves output unseen.
+    unsafe {
+        if GetStdHandle(STD_OUTPUT_HANDLE).map_or(true, |h| h.is_invalid()) { let _ = AttachConsole(ATTACH_PARENT_PROCESS); }
+    }
+}
+#[cfg(not(all(windows, not(debug_assertions))))]
+fn console_for_selftest() {}
+
 fn main() {
     let selftest = std::env::args().skip(1).any(|a| a == "--selftest");
+    if selftest { console_for_selftest(); }
     let base = selftest.then(|| serve::start().expect("could not start the self-test server on 127.0.0.1"));
     tauri::Builder::default()
         .manage(SelfTest { base })

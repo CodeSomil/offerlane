@@ -88,9 +88,9 @@ jobs:
       - name: Rust tests (incl. the Credential Manager round-trip)
         working-directory: apps/windows/src-tauri
         run: cargo test --locked
-      - name: Build the shell (debug build, so --selftest prints to the console)
+      - name: Build the shell (release build: devtools off, GUI subsystem, as shipped)
         working-directory: apps/windows/src-tauri
-        run: cargo build --locked --features tauri/custom-protocol
+        run: cargo build --release --locked --features tauri/custom-protocol
       - name: Apply self-test on WebView2
         working-directory: apps/windows/src-tauri
-        run: timeout 900 ./target/debug/offerlane.exe --selftest
+        run: timeout 900 ./target/release/offerlane.exe --selftest
