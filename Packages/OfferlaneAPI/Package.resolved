@@ -1,5 +1,5 @@
 {
-  "originHash" : "d23a5514d84b419c92c46ce5ba20d446e07a35b6a99e4ac7a06a8a8a2d75355b",
+  "originHash" : "e47c5e6e4501f525bc9f6cb13927a9bde3849b2a1598d034ab3a880d4902eca6",
   "pins" : [
     {
       "identity" : "openapikit",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "5b72eb9a6b23b1fec439d9a0bf38f115400421f9",
         "version" : "6.4.0"
+      }
+    },
+    {
+      "identity" : "sqlcipher.swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sqlcipher/SQLCipher.swift.git",
+      "state" : {
+        "revision" : "e7415c5e6b4fd9b78874bb956aad8a42b08e9966",
+        "version" : "4.20.0"
       }
     },
     {
@@ -89,6 +98,15 @@
       "state" : {
         "revision" : "a27b21e0c81c5bf42049b897a62aaf387e80f279",
         "version" : "6.2.2"
+      }
+    },
+    {
+      "identity" : "zipfoundation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/weichsel/ZIPFoundation.git",
+      "state" : {
+        "revision" : "22787ffb59de99e5dc1fbfe80b19c97a904ad48d",
+        "version" : "0.9.20"
       }
     }
   ],
