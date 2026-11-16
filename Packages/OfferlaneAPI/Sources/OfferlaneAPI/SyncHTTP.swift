@@ -28,7 +28,9 @@ public struct SyncHTTP: Sendable {
     func call<T>(tries: Int = 1, _ f: () async throws -> T) async throws -> T {
         for i in 1... {
             do { return try await f() } catch {
-                if error is Failure || error is BearerAuthError { throw error }
+                let inner = (error as? ClientError)?.underlyingError ?? error  // the runtime wraps middleware errors
+                if inner is BearerAuthError { throw Failure(message: "The sync service isn't using a secure connection, so Offerlane didn't use it.") }
+                if error is Failure { throw error }
                 // Only a transport failure is "offline" and retried; an answer we can't decode is not.
                 guard ((error as? ClientError)?.underlyingError ?? error) is URLError else { throw Self.unreadable }
                 if i >= tries { throw Self.offline }

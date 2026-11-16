@@ -15,12 +15,14 @@ public final class StoreSyncLocal: SyncLocal, @unchecked Sendable {  // only a `
     /// go back out verbatim) and a fingerprint of the job then (shared fields + status + local `updated`; unchanged since →
     /// the record is sent back as it was). Not `updated` alone: Mac times have whole seconds, so an edit in the same second would hide.
     /// An array, not an id-keyed map: the Store's snake_case coder would rewrite dictionary keys.
-    struct Record: Codable { var id: String; var json: String; var stamp: String }
+    /// `held`: an in-flight status from another device this Mac didn't take (no folder here); it goes back out while the role sits at "found".
+    struct Record: Codable { var id: String; var json: String; var stamp: String; var held: String? }
     struct Backup: Codable { var kind: String; var saved: String; var json: String }
 
     public func loadState() throws -> SyncState? { try store.get(.syncState) }
     public func saveState(_ state: SyncState?) throws {
-        if let state { try store.set(.syncState, state) } else { try store.delete(.syncState) }
+        if let state { try store.set(.syncState, state) }
+        else { for k in [Store.Key.syncState, .syncRecords, .syncBackups] { try store.delete(k) } }  // a later account must not inherit them
     }
     public func backup(_ kind: String, _ value: Any, saved: String) throws {
         // SHORTCUT: as on the web, no restore UI for these yet; the last one per kind is kept in the database.
@@ -72,10 +74,10 @@ public final class StoreSyncLocal: SyncLocal, @unchecked Sendable {  // only a `
         var out: [String: Any] = [:]
         for j in try store.jobs() where j.status != .found || byId[j.id] != nil {
             let r = byId[j.id]
-            if let r, r.stamp == Self.fingerprint(j), let same = Self.parse(r.json) { out[j.id] = same; continue }
+            if let r, r.stamp.isEmpty || r.stamp == Self.fingerprint(j), let same = Self.parse(r.json) { out[j.id] = same; continue }
             var rec = (r.flatMap { Self.parse($0.json) } as? [String: Any] ?? [:]).filter { !Self.macOwned.contains($0.key) }
             rec["job"] = Self.wireJob(j)
-            rec["status"] = j.status.rawValue
+            rec["status"] = j.status == .found ? r?.held ?? j.status.rawValue : j.status.rawValue
             rec["score"] = j.score
             rec["created"] = Self.utc(j.firstSeen)
             rec["updated"] = Self.utc(j.updated)
@@ -91,7 +93,7 @@ public final class StoreSyncLocal: SyncLocal, @unchecked Sendable {  // only a `
         var records: [Record] = try store.get(.syncRecords) ?? []
         for (id, value) in next where SyncEngine.canon(value) != SyncEngine.canon(cur[id]) {
             guard let rec = value as? [String: Any] else { continue }
-            var stamp = ""
+            var stamp = "", held: String?
             if let w = rec["job"] as? [String: Any], (w["id"] as? String) == id, let status = (rec["status"] as? String).flatMap(JobStatus.init(rawValue:)) {
                 let updated = Self.local(rec["updated"] as? String ?? "")
                 var j = try store.job(id) ?? {
@@ -103,15 +105,20 @@ public final class StoreSyncLocal: SyncLocal, @unchecked Sendable {  // only a `
                 }()
                 let old = j.status
                 Self.takeWire(w, into: &j)
-                j.status = status
+                // A role tailored and approved elsewhere has no folder (resume, answers) here: it must not reach this Mac's
+                // apply queue. It waits at the Mac's own step; the synced record keeps the other device's status.
+                if JobStatus.inFlight.contains(status) && j.folder.isEmpty {
+                    j.status = old == .found || JobStatus.inFlight.contains(old) ? .found : old
+                    held = status.rawValue
+                } else { j.status = status }
                 j.updated = updated.isEmpty ? Dates.now() : updated
-                if status.isHidden { j.stripForHiding() }
+                if j.status.isHidden { j.stripForHiding() }
                 try store.save(j)
-                if old != status { try store.addEvent(id, status: status.rawValue, source: "sync", detail: "") }
+                if old != j.status { try store.addEvent(id, status: j.status.rawValue, source: "sync", detail: "") }
                 stamp = Self.fingerprint(j)
             }
             records.removeAll { $0.id == id }
-            records.append(.init(id: id, json: SyncEngine.canon(rec), stamp: stamp))
+            records.append(.init(id: id, json: SyncEngine.canon(rec), stamp: stamp, held: held))
         }
         try store.set(.syncRecords, records)
     }

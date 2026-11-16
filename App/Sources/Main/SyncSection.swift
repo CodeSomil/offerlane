@@ -146,7 +146,11 @@ struct SyncSection: View {
             Text(rk).font(.system(.title3, design: .monospaced)).textSelection(.enabled).accessibilityIdentifier("sync.recoveryKey")
             note("Write it down or print it, and keep it somewhere safe. It's shown only once. If you lose every device and this key, your synced data can't be recovered, by you or by us.")
             HStack {
-                Button("Copy") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(rk, forType: .string) }.buttonStyle(.dsSecondary)
+                Button("Copy") {
+                    // Concealed: clipboard managers and Universal Clipboard history skip it (nspasteboard.org convention).
+                    let pb = NSPasteboard.general; pb.clearContents()
+                    pb.setString(rk, forType: .string); pb.setString("", forType: .init("org.nspasteboard.ConcealedType"))
+                }.buttonStyle(.dsSecondary)
                 Button("I've Saved It") { sync.phase = .checking; Task { await sync.check(app) } }.buttonStyle(.dsPrimary).accessibilityIdentifier("sync.saved")
             }
         case .ready(let last):

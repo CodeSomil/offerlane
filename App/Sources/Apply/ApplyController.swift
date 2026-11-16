@@ -31,7 +31,8 @@ final class ApplyController {
         guard let app, currentID == nil || job.map({ $0.status.isTracked || $0.status.isHidden }) == true else { return }
         currentID = nil
         // Read the store directly: the published snapshot refreshes asynchronously.
-        guard let j = ((try? app.store.jobs([.ready])) ?? []).sorted(by: { $0.updated < $1.updated }).first else { return }
+        // A role without its own folder (tailored resume + answers) never starts here, e.g. one that came from sync.
+        guard let j = ((try? app.store.jobs([.ready])) ?? []).filter({ !$0.folder.isEmpty }).sorted(by: { $0.updated < $1.updated }).first else { return }
         start(j.id)
     }
 

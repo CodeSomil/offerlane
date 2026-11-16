@@ -67,6 +67,8 @@ public struct CloudSignIn: Sendable {
               let a = (j["authorization_endpoint"] as? String).flatMap(URL.init(string:)),
               let t = (j["token_endpoint"] as? String).flatMap(URL.init(string:)), let iss = j["issuer"] as? String else { throw Failure.notOIDC }
         guard CloudConfig.allowed(a), CloudConfig.allowed(t) else { throw Failure.insecure }
+        let trim = { (x: String) in x.hasSuffix("/") ? String(x.dropLast()) : x }
+        guard trim(iss) == trim(config.issuer.absoluteString) else { throw Failure.notOIDC }  // OIDC Discovery 4.3
         return Server(authorize: a, token: t, issuer: iss)
     }
 

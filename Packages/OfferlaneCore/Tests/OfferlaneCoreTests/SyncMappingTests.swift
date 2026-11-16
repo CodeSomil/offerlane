@@ -38,10 +38,9 @@ final class SyncMappingTests: XCTestCase {
         XCTAssertEqual(canon(back), canon(["gh:acme:1": rec]), "what the web wrote goes back out exactly (no push, no churn)")
 
         var j = try XCTUnwrap(try store.job("gh:acme:1"))
-        XCTAssertEqual(j.status, .review)
+        XCTAssertEqual(j.status, .found, "in review on the web, but not tailored here: it waits as a new match")
         XCTAssertEqual(j.title, job["title"] as? String)
         XCTAssertEqual(j.updated, Dates.now(StoreSyncLocal.isoMs.date(from: "2026-11-15T12:34:56.789Z")!), "kept in the Mac's local time")
-        XCTAssertEqual(try store.events(for: "gh:acme:1").first?.source, "sync")
 
         // The Mac edits the role: Mac-only fields stay local, the web's plan and answers survive, the time goes out as UTC.
         j = try store.update("gh:acme:1") { $0.notes = "Mac-only note"; $0.location = "Berlin" }
@@ -63,6 +62,42 @@ final class SyncMappingTests: XCTestCase {
         _ = try store.update("gh:acme:2") { $0.location = "Berlin" }  // same second, almost surely
         let out = (try local.read("applications") as? [String: Any])?["gh:acme:2"] as? [String: Any]
         XCTAssertEqual((out?["job"] as? [String: Any])?["location"] as? String, "Berlin")
+    }
+
+    /// Review (P4.4, Medium): a role approved on the web has no tailoring on this Mac, so it must not reach the Mac's apply
+    /// queue as "ready"; it waits as a new match, and the web's record still goes back out unchanged.
+    func testAnInFlightRoleFromTheWebWaitsForTheMacsOwnReview() throws {
+        let store = try Store(), local = StoreSyncLocal(store: store), g = try golden()
+        var job = g["job"] as! [String: Any]; job["id"] = "gh:acme:3"
+        let rec: [String: Any] = ["job": job, "status": "ready", "score": 1, "created": "2026-11-10T09:00:00.000Z", "updated": "2026-11-15T12:00:00.000Z"]
+        let back = try local.update("applications") { _ in ["gh:acme:3": rec] }
+        XCTAssertEqual(try store.job("gh:acme:3")?.status, .found)
+        XCTAssertTrue(try store.jobs([.ready]).isEmpty, "nothing for the apply queue")
+        XCTAssertEqual(canon((back as? [String: Any])?["gh:acme:3"]), canon(rec), "the web's record isn't rewritten")
+        _ = try store.update("gh:acme:3") { $0.location = "Berlin" }  // a later Mac edit doesn't push "found" over the web's "ready"
+        let edited = (try local.read("applications") as? [String: Any])?["gh:acme:3"] as? [String: Any]
+        XCTAssertEqual(edited?["status"] as? String, "ready")
+        XCTAssertEqual((edited?["job"] as? [String: Any])?["location"] as? String, "Berlin")
+        // A role this Mac tailored (it has a folder) does take the web's move.
+        var mine = Job(company: "Acme", title: "Eng", id: "gh:acme:4"); mine.folder = "acme-eng"; mine.status = .review
+        try store.save(mine)
+        var job4 = job; job4["id"] = "gh:acme:4"
+        _ = try local.update("applications") { cur in (cur as? [String: Any] ?? [:]).merging(["gh:acme:4": ["job": job4, "status": "ready", "updated": "2026-11-16T12:00:00.000Z"] as [String: Any]]) { $1 } }
+        XCTAssertEqual(try store.job("gh:acme:4")?.status, .ready)
+    }
+
+    /// Review Lows: a record the Mac couldn't take in stays verbatim even when the Mac has that job; turning sync off forgets sync's bookkeeping.
+    func testUnreadableRecordForAKnownJobStaysVerbatimAndForgetClearsBookkeeping() throws {
+        let store = try Store(), local = StoreSyncLocal(store: store)
+        try store.upsert(Job(company: "Acme", title: "Eng", id: "k1")); try store.transition("k1", to: .tailoring, by: "test")
+        let future: [String: Any] = ["job": ["id": "k1"], "status": "some-future-status", "updated": "2026-12-01T00:00:00.000Z"]
+        let back = try local.update("applications") { cur in (cur as? [String: Any] ?? [:]).merging(["k1": future]) { $1 } }
+        XCTAssertEqual(canon((back as? [String: Any])?["k1"]), canon(future))
+        try local.saveState(SyncState(userId: "u", keyId: "k"))
+        try local.backup("profile", ["a": 1], saved: "t")
+        try local.saveState(nil)
+        XCTAssertNil(try store.get(.syncRecords, as: [StoreSyncLocal.Record].self))
+        XCTAssertNil(try store.get(.syncBackups, as: [StoreSyncLocal.Backup].self))
     }
 
     func testOnlyActedOnJobsAndUnknownRecordsPassThrough() throws {
@@ -89,7 +124,7 @@ final class SyncMappingTests: XCTestCase {
         let eb = SyncEngine(remote: server, local: StoreSyncLocal(store: b), keys: MemoryKeys())
         try await eb.restoreKeyring(rk)
         _ = try await eb.syncNow()
-        XCTAssertEqual(try b.job("acted-1")?.status, .tailoring)
+        XCTAssertEqual(try b.job("acted-1")?.status, .found, "tailoring happens on the Mac that has the folder")
         XCTAssertEqual(try b.profile().personal.firstName, "Zoë")
         let puts = server.puts
         _ = try await ea.syncNow(); _ = try await eb.syncNow(); _ = try await ea.syncNow()

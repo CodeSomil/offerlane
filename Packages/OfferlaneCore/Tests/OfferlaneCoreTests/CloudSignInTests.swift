@@ -65,6 +65,9 @@ final class CloudSignInTests: XCTestCase {
         let downgrade = CloudSignIn(config: config, transport: MockTransport { _ in
             (200, Data(#"{"issuer":"https://id.test/","authorization_endpoint":"http://id.test/authorize","token_endpoint":"https://id.test/t"}"#.utf8)) }) { _ in }
         await assertThrows(.insecure) { _ = try await downgrade.discover() }
+        let otherIssuer = CloudSignIn(config: config, transport: MockTransport { _ in
+            (200, Data(#"{"issuer":"https://evil.test/","authorization_endpoint":"https://id.test/a","token_endpoint":"https://id.test/t"}"#.utf8)) }) { _ in }
+        await assertThrows(.notOIDC) { _ = try await otherIssuer.discover() }
         let s = CloudSignIn(config: config, transport: MockTransport { _ in (400, Data(#"{"error":"invalid_grant"}"#.utf8)) }) { _ in }
         let srv = CloudSignIn.Server(authorize: URL(string: "https://id.test/a")!, token: URL(string: "https://id.test/t")!, issuer: "https://id.test/")
         let r = URL(string: "http://localhost:1/")!

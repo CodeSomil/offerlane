@@ -118,6 +118,8 @@ final class SyncHTTPTests: XCTestCase {
         do { _ = try await sync(Flaky(fails: 3, .ok, "{}")).put("profile", expected: 1, keyId: "k", ciphertext: Data()); XCTFail() }
         catch let e as SyncHTTP.Failure { XCTAssertEqual(e, SyncHTTP.offline) }
         do { _ = try await sync(Flaky(fails: 0, .ok, "{}")).get("nope"); XCTFail() } catch {}
+        let plain = SyncHTTP(client: .offerlane(serverURL: URL(string: "http://api.test")!, transport: Flaky(fails: 0, .ok, "{}"), token: { "tok" }))
+        do { _ = try await plain.me(); XCTFail() } catch let e as SyncHTTP.Failure { XCTAssertTrue(e.message.contains("secure connection")) }
         do { _ = try await sync(Flaky(fails: 0, .ok, "{}")).get("profile"); XCTFail() }
         catch let e as SyncHTTP.Failure { XCTAssertEqual(e, SyncHTTP.unreadable, "a bad answer is not 'offline'") }
     }

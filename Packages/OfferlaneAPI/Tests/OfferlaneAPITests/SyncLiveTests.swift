@@ -47,7 +47,7 @@ final class SyncLiveTests: XCTestCase {
         try await eb.restoreKeyring(rk)
         _ = try await eb.syncNow()
         XCTAssertEqual(try b.profile().personal.firstName, "Zoë")
-        XCTAssertEqual(try b.job("live-1")?.status, .tailoring)
+        XCTAssertEqual(try b.job("live-1")?.status, .found, "not tailored on this Mac, so it waits as a new match")
 
         // A stale If-Match gets the server's 409; the engine starts over and merges.
         let stale = try await http.get("applications")!
