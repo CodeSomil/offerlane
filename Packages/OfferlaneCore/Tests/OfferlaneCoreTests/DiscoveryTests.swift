@@ -93,6 +93,10 @@ final class RankingTests: XCTestCase {
             XCTAssertEqual(j.minYears, e["min_years"]?.double.map { Int($0) }); XCTAssertEqual(j.visa, e["visa"]?.string)
             XCTAssertEqual(Ranking.condense(post.description), e["condense"]?.string, post.title)
         }
+        // Watchlist companies get +10; everyone else is still scored (watchlist never filters).
+        var w = ctx; w.watch = ["scale ai"]
+        var a = Job(company: "Scale AI", title: "Data Scientist", location: "Remote"), b = a; b.company = "Unlisted Co"
+        XCTAssertEqual(Ranking.localScore(&a, ctx: w, visa: visa) - Ranking.localScore(&b, ctx: w, visa: visa), 10)
     }
 }
 
@@ -189,7 +193,15 @@ final class HardeningTests: XCTestCase {
         let app = Paths.applications.appendingPathComponent("2026-11-01_A_B"); try FileManager.default.createDirectory(at: app, withIntermediateDirectories: true)
         try Data("%PDF".utf8).write(to: app.appendingPathComponent("r.pdf"))
         try kc.set("secret", account: "x")
+        try Contacts.upsert(Contact(name: "Pat Recruiter"), in: store)
+        var offer = Offer(); offer.company = "A"; offer.base = 100; try store.set(.offers, [offer])
+        try store.set(.interviewPrep, InterviewPrepState()); try store.set(.skillPlan, SkillPlanState())
         let out = try DataTools.export(store: store, to: home)
+        XCTAssertTrue(try String(contentsOf: out.appendingPathComponent("contacts.json"), encoding: .utf8).contains("Pat Recruiter"))
+        XCTAssertEqual(try JSONCoding.decoder.decode([Offer].self, from: Data(contentsOf: out.appendingPathComponent("offers.json"))).first?.base, 100)
+        for f in ["contacts.json", "offers.json", "interview-prep.json", "skill-plan.json"] {
+            XCTAssertFalse(try String(contentsOf: out.appendingPathComponent(f), encoding: .utf8).contains("secret"), f)
+        }
         for f in ["profile.json", "search.json", "jobs.json", "resumes/main/resume.json", "resumes/main/template.tex", "Applications/2026-11-01_A_B/r.pdf", "README.txt"] {
             XCTAssertTrue(FileManager.default.fileExists(atPath: out.appendingPathComponent(f).path), f)
         }

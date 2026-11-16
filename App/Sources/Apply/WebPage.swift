@@ -8,17 +8,22 @@ import OfferlaneCore
 final class WebPage: NSObject, WKNavigationDelegate, WKUIDelegate {
     let web: WKWebView
     private(set) var loading = false
-    private static let storeID = UUID(uuidString: "6A0B3C1E-5D2F-4E8A-9B7C-1F2E3D4C5B6A")!
+    /// Set per account before the apply window is created (`Paths.webStoreID`).
+    static var storeID = Paths.webStoreID(for: nil, legacy: true)
     static let script: String = (try? String(contentsOf: Bundle.main.url(forResource: "autofill", withExtension: "js")!, encoding: .utf8)) ?? ""
 
     init(persistent: Bool = true) {
         let cfg = WKWebViewConfiguration()
         cfg.websiteDataStore = persistent ? WKWebsiteDataStore(forIdentifier: Self.storeID) : .nonPersistent()
-        cfg.userContentController.addUserScript(WKUserScript(source: Self.script, injectionTime: .atDocumentEnd, forMainFrameOnly: false))
+        // The form filler runs in its own JavaScript world: it shares the page's DOM but not its globals, so a career
+        // site can't replace window.__ja to read what Offerlane types or fake what Offerlane sees.
+        cfg.userContentController.addUserScript(WKUserScript(source: Self.script, injectionTime: .atDocumentEnd, forMainFrameOnly: false, in: Self.world))
         cfg.preferences.javaScriptCanOpenWindowsAutomatically = false
         web = WKWebView(frame: NSRect(x: 0, y: 0, width: 1200, height: 900), configuration: cfg)
         web.customUserAgent = HTTP.userAgent
+        #if DEBUG
         web.isInspectable = true
+        #endif
         super.init()
         web.navigationDelegate = self; web.uiDelegate = self
     }
@@ -43,11 +48,11 @@ final class WebPage: NSObject, WKNavigationDelegate, WKUIDelegate {
     func call(_ fn: String, _ args: [Any] = []) async -> JSONValue {
         let body = "if (!window.__ja) { eval(src); } const r = await window.__ja[fn](...args); return JSON.stringify(r === undefined ? null : r);"
         do {
-            let out = try await web.callAsyncJavaScript(body, arguments: ["fn": fn, "args": args, "src": Self.script], in: nil, contentWorld: .page)
+            let out = try await web.callAsyncJavaScript(body, arguments: ["fn": fn, "args": args, "src": Self.script], in: nil, contentWorld: Self.world)
             guard let s = out as? String else { return .null }
             return (try? JSONDecoder().decode(JSONValue.self, from: Data(s.utf8))) ?? .null
         } catch {
-            Log.info("js \(fn): \(error.localizedDescription)")
+            Log.info("js \(fn): \(error.plainMessage)")
             return .null
         }
     }
@@ -70,7 +75,21 @@ final class WebPage: NSObject, WKNavigationDelegate, WKUIDelegate {
     func webView(_ w: WKWebView, didFailProvisionalNavigation n: WKNavigation!, withError e: Error) { loading = false }
     /// Links that open a new window load in place, so the agent keeps one page.
     func webView(_ w: WKWebView, createWebViewWith c: WKWebViewConfiguration, for a: WKNavigationAction, windowFeatures f: WKWindowFeatures) -> WKWebView? {
-        if let u = a.request.url { w.load(URLRequest(url: u)) }
+        if let u = a.request.url, Self.allowed(u) { w.load(URLRequest(url: u)) }
         return nil
     }
+    /// Only web pages: no file://, no custom app schemes (which would hand control to another app), no javascript: URLs.
+    func webView(_ w: WKWebView, decidePolicyFor a: WKNavigationAction) async -> WKNavigationActionPolicy {
+        guard let u = a.request.url else { return .cancel }
+        if Self.allowed(u) { return .allow }
+        Log.info("blocked navigation to a \(u.scheme ?? "?") URL")
+        return .cancel
+    }
+    static func allowed(_ u: URL) -> Bool {
+        switch u.scheme?.lowercased() {
+        case "https", "http", "about", "blob", "data": true
+        default: false
+        }
+    }
+    static let world = WKContentWorld.world(name: "offerlane-autofill")
 }

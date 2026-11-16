@@ -19,6 +19,18 @@ final class LiveProviderTests: XCTestCase {
 
 /// Find Jobs against the real public career sites, using an imported v2 search. Opt-in.
 final class LiveFindJobsTests: XCTestCase {
+    /// Real Ollama on this Mac: the eight steps end to end, including the tailoring-sized strict-JSON test. Starts Ollama if needed;
+    /// pulls the model only if it's missing (set OFFERLANE_OLLAMA_MODEL to pick one, default by RAM).
+    func testOllamaSetupLive() async throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["OFFERLANE_LIVE"] == "1", "set OFFERLANE_LIVE=1")
+        try XCTSkipUnless(OllamaSetup().isInstalled, "Ollama isn't installed")
+        let spec = try XCTUnwrap(ProviderRegistry.load().first { $0.id == "ollama" })
+        let adapter = OllamaAdapter(spec: spec, model: ProcessInfo.processInfo.environment["OFFERLANE_OLLAMA_MODEL"])
+        let t0 = Date()
+        let config = try await ProviderSetup(adapter).run(approve: { _ in false }).get()
+        print("LIVE ollama \(config.model) passed strict JSON in \(Int(Date().timeIntervalSince(t0))) s")
+    }
+
     func testFindJobsLive() async throws {
         _ = Fixture.useVendoredTectonic
         try XCTSkipUnless(ProcessInfo.processInfo.environment["OFFERLANE_LIVE"] == "1", "set OFFERLANE_LIVE=1")

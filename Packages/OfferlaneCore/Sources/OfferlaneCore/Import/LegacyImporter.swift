@@ -9,7 +9,7 @@ public struct LegacyImporter: Sendable {
 
     /// Where the v2 prototype kept its data by default (override with OFFERLANE_LEGACY_DIR).
     public static var defaultFolder: URL {
-        if let d = ProcessInfo.processInfo.environment["OFFERLANE_LEGACY_DIR"] { return URL(fileURLWithPath: d) }
+        if let d = TestHooks.env["OFFERLANE_LEGACY_DIR"] { return URL(fileURLWithPath: d) }
         return URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Documents/Claude/Job Search/Job Agent/app")
     }
     public static func looksValid(_ dir: URL) -> Bool { FileManager.default.fileExists(atPath: dir.appendingPathComponent("profile.json").path) }

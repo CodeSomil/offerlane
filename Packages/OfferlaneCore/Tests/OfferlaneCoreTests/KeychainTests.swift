@@ -32,4 +32,16 @@ final class KeychainTests: XCTestCase {
         XCTAssertNotNil(try v.store.account(host: host)?.created)
         try v.forget(host: host); XCTAssertNil(v.password(host: host)); XCTAssertNil(try v.store.account(host: host))
     }
+
+    /// P1.7d: prepared for the Developer ID (data-protection Keychain, Touch ID binding); today's default is unchanged.
+    func testProtectionQueries() {
+        let login = Keychain(service: "s"), dp = Keychain(service: "s", protection: .dataProtection), bio = Keychain(service: "s", protection: .biometric)
+        XCTAssertNil(login.base("a")[kSecUseDataProtectionKeychain as String], "default stays the login Keychain")
+        XCTAssertEqual(login.addAttributes()[kSecAttrAccessible as String] as? String, kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly as String)
+        XCTAssertEqual(dp.base("a")[kSecUseDataProtectionKeychain as String] as? Bool, true)
+        XCTAssertNil(dp.addAttributes()[kSecAttrAccessControl as String])
+        XCTAssertEqual(bio.base("a")[kSecUseDataProtectionKeychain as String] as? Bool, true)
+        XCTAssertNotNil(bio.addAttributes()[kSecAttrAccessControl as String], "Touch ID bound")
+        XCTAssertNil(bio.addAttributes()[kSecAttrAccessible as String], "access control carries accessibility itself")
+    }
 }

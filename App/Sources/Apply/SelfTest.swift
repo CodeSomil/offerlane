@@ -167,7 +167,7 @@ enum PackageSelfTest {
         do {
             let rep = try LegacyImporter(store: app.store).run(from: LegacyImporter.defaultFolder)
             check(rep.resumes.count == 2, "imported previous-version (v2) data (\(rep.description))")
-        } catch { check(false, "import: \(error.localizedDescription)"); return 1 }
+        } catch { check(false, "import: \(error.plainMessage)"); return 1 }
         try? await app.store.db.write { try $0.execute(sql: "DELETE FROM job WHERE status != 'declined'") }
         guard let exe = ClaudeCLIClient.locate() else { check(false, "Claude CLI found"); return 1 }
         let ai = AI(client: ClaudeCLIClient(executable: exe), store: app.store)
@@ -185,7 +185,7 @@ enum PackageSelfTest {
             print("   changes: \(j.changesSummary)")
             print("   rewrites: \(r.groups.flatMap(\.bullets).filter { $0.text != $0.original }.count), guard warnings: \(r.warnings.count)")
             check(j.status == .review && ch?.note == nil && (ch?.ats.hasPrefix("PASS") ?? false), "tailored with the real AI and compiled with the bundled LaTeX")
-        } catch { check(false, "tailoring: \(error.localizedDescription)") }
+        } catch { check(false, "tailoring: \(error.plainMessage)") }
         print(failed == 0 ? "PACKAGE SELF-TEST PASSED" : "PACKAGE SELF-TEST FAILED")
         return failed == 0 ? 0 : 1
     }

@@ -45,5 +45,5 @@
   <path d="M 496 298 L 532 334 L 602 262" fill="none" stroke="#FFFFFF" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
   <text x="212" y="118" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Inter, Helvetica, Arial, sans-serif" font-size="92" font-weight="700" letter-spacing="-1.5" fill="#F9FAFB">Offerlane</text>
-  <text x="216" y="160" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, Helvetica, Arial, sans-serif" font-size="26" font-weight="500" fill="#CBD5E1">Your lane from résumé to offer</text>
+  <text x="216" y="160" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, Helvetica, Arial, sans-serif" font-size="26" font-weight="500" fill="#CBD5E1">Your lane to what&#8217;s next.</text>
 </svg>

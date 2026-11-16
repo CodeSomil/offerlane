@@ -6,9 +6,11 @@
 </p>
 
 <p align="center">
-  <b>Your lane from résumé to offer.</b><br>
-  A Mac app that finds roles on company career sites, tailors your résumé for each one, fills in the application,
-  and stops so <b>you</b> click Submit. You approve every step.
+  <b>Your lane to what's next.</b><br>
+  Offerlane helps you grow your career, not just land the next job. It reads your résumé and goals, finds roles worth
+  your time, shows which skills stand between you and the ones you want, and tailors each application without inventing
+  anything. It prepares you for interviews, tracks every reply, and helps you compare and negotiate offers. Your data
+  stays yours, and Offerlane never submits anything until you do.
 </p>
 
 <p align="center">
@@ -70,7 +72,7 @@ Earlier releases: [release notes](docs/RELEASE_NOTES.md).
 
 | | |
 |---|---|
-| <img src="docs/screenshots/readme-home-light.png" alt="Home" width="420"><br>**Home.** Today's focus, your readiness for the role you want, and this week's numbers. | <img src="docs/screenshots/review-light.png" alt="Reviewing a tailored résumé" width="420"><br>**Review every change.** Your original in red, the tailored text in green, with a live PDF preview. Claims not in your résumé are blocked. |
+| <img src="docs/screenshots/readme-today-light.png" alt="Today" width="420"><br>**Today.** One next step, how ready your setup is, this week's funnel and upcoming interviews. | <img src="docs/screenshots/review-light.png" alt="Reviewing a tailored résumé" width="420"><br>**Review every change.** Your original in red, the tailored text in green, with a live PDF preview. Claims not in your résumé are blocked. |
 | <img src="docs/screenshots/readme-pipeline-light.png" alt="Pipeline board" width="420"><br>**Pipeline.** Every application on one board. Replies in your inbox move cards along by themselves. | <img src="docs/screenshots/readme-insights-light.png" alt="Application insights" width="420"><br>**Insights.** Reply and interview rates by résumé version, source and role type. |
 | <img src="docs/screenshots/readme-skills-light.png" alt="Skill gaps" width="420"><br>**Skill gaps.** Which skills the roles you want ask for, counted from real postings, and a learning plan from verified links. | <img src="docs/screenshots/readme-goals-light.png" alt="Goals and career paths" width="420"><br>**Goals.** One-, three- and five-year paths and pivot options, with readiness for each. |
 | <img src="docs/screenshots/readme-interview-prep-light.png" alt="Interview prep" width="420"><br>**Interview prep.** Questions for the role, a STAR story bank built only from your résumé, and a mock interviewer. | <img src="docs/screenshots/readme-resumes-light.png" alt="Résumés and résumé health" width="420"><br>**Résumés.** Several versions, a résumé health and ATS check per role, and LinkedIn and portfolio tips. |

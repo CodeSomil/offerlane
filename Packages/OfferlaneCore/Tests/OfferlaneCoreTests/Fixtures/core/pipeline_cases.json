@@ -1,0 +1,18 @@
+{
+  "now": "2026-11-11T12:00:00",
+  "cases": [
+    { "status": "applied", "updated": "2026-10-26T12:00:00", "age": 16, "stale": true, "next": "Send a short follow-up", "why": "16 days quiet" },
+    { "status": "applied", "updated": "2026-10-28T12:00:00", "age": 14, "stale": true, "next": "Send a short follow-up", "why": "14 days is the threshold" },
+    { "status": "applied", "updated": "2026-10-29T12:00:00", "age": 13, "stale": false, "next": "Wait; replies usually come in 7–10 days", "why": "one day short" },
+    { "status": "acknowledged", "updated": "2026-10-12T12:00:00", "age": 30, "stale": true, "next": "Send a short follow-up", "why": "acknowledged also waits on the employer" },
+    { "status": "interview", "updated": "2026-10-12T12:00:00", "age": 30, "stale": false, "next": "Prepare your STAR stories", "why": "the ball is in the user's court" },
+    { "status": "applied", "updated": "2026-11-09T12:00:00", "age": 2, "stale": false, "next": "Nothing to do yet", "why": "fresh" },
+    { "status": "applied", "updated": "2026-11-03T12:00:00", "age": 8, "stale": false, "next": "Wait; replies usually come in 7–10 days", "why": "a week in" },
+    { "status": "screen", "updated": "2026-11-10T12:00:00", "age": 1, "stale": false, "next": "Prepare your STAR stories", "why": "screen" },
+    { "status": "assessment", "updated": "2026-11-10T12:00:00", "age": 1, "stale": false, "next": "Complete the assessment", "why": "assessment" },
+    { "status": "offer", "updated": "2026-11-10T12:00:00", "age": 1, "stale": false, "next": "Compare offers", "why": "offer" },
+    { "status": "tailoring", "updated": "2026-11-10T12:00:00", "age": 1, "stale": false, "next": "Open it to see what's next", "why": "other stages" },
+    { "status": "applied", "updated": "2026-10-28T23:30:00", "age": 14, "stale": true, "next": "Send a short follow-up", "why": "calendar days across the US clock change" },
+    { "status": "applied", "updated": "garbage", "age": 0, "stale": false, "next": "Nothing to do yet", "why": "unreadable date is age 0" }
+  ]
+}

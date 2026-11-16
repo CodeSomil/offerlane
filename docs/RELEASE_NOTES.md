@@ -1,5 +1,7 @@
 # Offerlane 0.3.0
 
+*Your lane to what's next.* Offerlane is your private career companion. Find the right roles, close skill gaps, tailor your applications, prepare for interviews and negotiate offers. You stay in control, and nothing is sent without your approval.
+
 ## Highlights
 - **Connect any AI in one click:** **Sign in with OpenRouter** needs no key copying. It gives you free models, or paid models from many AI companies once you add OpenRouter credit. You can also connect directly to Ollama (on your Mac), Google Gemini, Groq, Cloudflare Workers AI, a Claude API key or your own endpoint. Each option says what it does with your data before you connect it.
 - **Backup AIs:** add more than one AI. If the first is busy or down, the next one takes over.

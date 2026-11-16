@@ -41,24 +41,19 @@ public struct AnthropicClient: LLMClient {
         req.setValue(Self.apiVersion, forHTTPHeaderField: "anthropic-version")
         req.setValue("application/json", forHTTPHeaderField: "content-type")
         req.httpBody = try JSONSerialization.data(withJSONObject: body(r))
-        var attempt = 0
-        while true {
-            try Task.checkCancellation()
-            let (data, resp): (Data, URLResponse)
-            do { (data, resp) = try await session.data(for: req) } catch is CancellationError { throw LLMError.cancelled } catch {
-                throw LLMError.unreachable("Can't reach the Claude API (\(error.localizedDescription)). Check your internet connection.")
-            }
-            let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
-            if [429, 500, 502, 503, 529].contains(code), attempt < 3 {
-                attempt += 1
-                let wait = Double((resp as? HTTPURLResponse)?.value(forHTTPHeaderField: "retry-after") ?? "") ?? Double(8 * attempt)
-                try await Task.sleep(nanoseconds: UInt64(min(wait, 60) * 1e9)); continue
-            }
-            let text = String(decoding: data, as: UTF8.self)
-            if code == 401 { throw LLMError.notSignedIn("The Claude API key was rejected. Check it in Settings → AI.") }
-            guard code == 200 else { throw LLMError.http(code, text) }
-            return try Self.parse(data)
+        try Task.checkCancellation()
+        let (data, resp): (Data, URLResponse)
+        do { (data, resp) = try await session.data(for: req) } catch is CancellationError { throw LLMError.cancelled } catch {
+            throw LLMError.unreachable("Can't reach the Claude API (\(error.localizedDescription)). Check your internet connection.")
         }
+        let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
+        let text = String(decoding: data, as: UTF8.self)
+        // Retries and backoff live in ResilientClient.
+        if code == 429 { throw LLMError.rateLimited("The Claude API's rate limit was reached (error 429). Wait a minute, or add another AI in Settings → AI.",
+                                                    retryAfter: (resp as? HTTPURLResponse)?.retryAfter) }
+        if code == 401 { throw LLMError.notSignedIn("The Claude API key was rejected. Check it in Settings → AI.") }
+        guard code == 200 else { throw LLMError.http(code, text) }
+        return try Self.parse(data)
     }
 
     public static func parse(_ data: Data) throws -> LLMResponse {

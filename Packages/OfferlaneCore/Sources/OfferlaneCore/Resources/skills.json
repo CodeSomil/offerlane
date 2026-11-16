@@ -1,0 +1,1045 @@
+{
+  "version": 1,
+  "note": "Skill lexicon for the market scan. weight: 3 core, 2 strong signal, 1 supporting. Aliases match whole words after normalising (lowercase, punctuation to spaces).",
+  "skills": [
+    {
+      "id": "python",
+      "name": "Python",
+      "kind": "skill",
+      "weight": 3,
+      "aliases": [
+        "python"
+      ]
+    },
+    {
+      "id": "sql",
+      "name": "SQL",
+      "kind": "skill",
+      "weight": 3,
+      "aliases": [
+        "sql",
+        "postgresql",
+        "postgres",
+        "mysql"
+      ]
+    },
+    {
+      "id": "r",
+      "name": "R",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "r programming",
+        "rstudio",
+        "tidyverse"
+      ]
+    },
+    {
+      "id": "java",
+      "name": "Java",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "java"
+      ]
+    },
+    {
+      "id": "javascript",
+      "name": "JavaScript",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "javascript",
+        "typescript",
+        "node js",
+        "nodejs"
+      ]
+    },
+    {
+      "id": "go",
+      "name": "Go",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "golang"
+      ]
+    },
+    {
+      "id": "rust",
+      "name": "Rust",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "rust programming",
+        "rustlang"
+      ]
+    },
+    {
+      "id": "scala",
+      "name": "Scala",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "scala programming",
+        "akka"
+      ]
+    },
+    {
+      "id": "swift",
+      "name": "Swift",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "swiftui",
+        "swift programming",
+        "ios development"
+      ]
+    },
+    {
+      "id": "react",
+      "name": "React",
+      "kind": "tool",
+      "weight": 2,
+      "aliases": [
+        "react",
+        "react js",
+        "reactjs",
+        "next js",
+        "nextjs"
+      ]
+    },
+    {
+      "id": "machine-learning",
+      "name": "Machine learning",
+      "kind": "skill",
+      "weight": 3,
+      "aliases": [
+        "machine learning",
+        "ml models",
+        "ml engineering",
+        "ml systems"
+      ]
+    },
+    {
+      "id": "deep-learning",
+      "name": "Deep learning",
+      "kind": "skill",
+      "weight": 3,
+      "aliases": [
+        "deep learning",
+        "neural networks",
+        "neural network"
+      ]
+    },
+    {
+      "id": "llm",
+      "name": "Large language models",
+      "kind": "skill",
+      "weight": 3,
+      "aliases": [
+        "llm",
+        "llms",
+        "large language model",
+        "large language models",
+        "generative ai",
+        "genai",
+        "gen ai",
+        "foundation models",
+        "foundation model"
+      ]
+    },
+    {
+      "id": "rag",
+      "name": "Retrieval-augmented generation",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "rag",
+        "retrieval augmented generation",
+        "vector database",
+        "vector databases",
+        "embeddings"
+      ]
+    },
+    {
+      "id": "prompt-engineering",
+      "name": "Prompt engineering",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "prompt engineering",
+        "prompting",
+        "prompt design"
+      ]
+    },
+    {
+      "id": "ai-agents",
+      "name": "AI agents",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "ai agents",
+        "agentic",
+        "tool use",
+        "function calling"
+      ]
+    },
+    {
+      "id": "nlp",
+      "name": "Natural language processing",
+      "kind": "skill",
+      "weight": 3,
+      "aliases": [
+        "nlp",
+        "natural language processing"
+      ]
+    },
+    {
+      "id": "computer-vision",
+      "name": "Computer vision",
+      "kind": "skill",
+      "weight": 3,
+      "aliases": [
+        "computer vision",
+        "image recognition",
+        "object detection"
+      ]
+    },
+    {
+      "id": "reinforcement-learning",
+      "name": "Reinforcement learning",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "reinforcement learning",
+        "rlhf"
+      ]
+    },
+    {
+      "id": "statistics",
+      "name": "Statistics",
+      "kind": "skill",
+      "weight": 3,
+      "aliases": [
+        "statistics",
+        "statistical",
+        "statistical modeling",
+        "statistical modelling",
+        "hypothesis testing"
+      ]
+    },
+    {
+      "id": "ab-testing",
+      "name": "A/B testing and experimentation",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "a b testing",
+        "ab testing",
+        "experimentation",
+        "experiment design",
+        "controlled experiments"
+      ]
+    },
+    {
+      "id": "forecasting",
+      "name": "Forecasting",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "forecasting",
+        "time series"
+      ]
+    },
+    {
+      "id": "mlops",
+      "name": "MLOps",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "mlops",
+        "model deployment",
+        "model serving",
+        "ml infrastructure",
+        "ml platform"
+      ]
+    },
+    {
+      "id": "evaluation",
+      "name": "Model evaluation",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "evals",
+        "model evaluation",
+        "llm evaluation",
+        "evaluation frameworks"
+      ]
+    },
+    {
+      "id": "pytorch",
+      "name": "PyTorch",
+      "kind": "tool",
+      "weight": 2,
+      "aliases": [
+        "pytorch"
+      ]
+    },
+    {
+      "id": "tensorflow",
+      "name": "TensorFlow",
+      "kind": "tool",
+      "weight": 2,
+      "aliases": [
+        "tensorflow",
+        "keras"
+      ]
+    },
+    {
+      "id": "scikit-learn",
+      "name": "scikit-learn",
+      "kind": "tool",
+      "weight": 2,
+      "aliases": [
+        "scikit learn",
+        "sklearn"
+      ]
+    },
+    {
+      "id": "hugging-face",
+      "name": "Hugging Face",
+      "kind": "tool",
+      "weight": 2,
+      "aliases": [
+        "hugging face",
+        "huggingface",
+        "transformers library"
+      ]
+    },
+    {
+      "id": "pandas",
+      "name": "pandas",
+      "kind": "tool",
+      "weight": 2,
+      "aliases": [
+        "pandas",
+        "numpy"
+      ]
+    },
+    {
+      "id": "spark",
+      "name": "Apache Spark",
+      "kind": "tool",
+      "weight": 2,
+      "aliases": [
+        "spark",
+        "pyspark",
+        "databricks"
+      ]
+    },
+    {
+      "id": "airflow",
+      "name": "Airflow",
+      "kind": "tool",
+      "weight": 1,
+      "aliases": [
+        "airflow",
+        "dagster",
+        "prefect"
+      ]
+    },
+    {
+      "id": "dbt",
+      "name": "dbt",
+      "kind": "tool",
+      "weight": 1,
+      "aliases": [
+        "dbt"
+      ]
+    },
+    {
+      "id": "data-warehousing",
+      "name": "Data warehousing",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "data warehouse",
+        "data warehousing",
+        "snowflake",
+        "bigquery",
+        "redshift"
+      ]
+    },
+    {
+      "id": "data-engineering",
+      "name": "Data engineering",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "data engineering",
+        "data pipelines",
+        "data pipeline",
+        "etl",
+        "elt"
+      ]
+    },
+    {
+      "id": "tableau",
+      "name": "BI dashboards",
+      "kind": "tool",
+      "weight": 1,
+      "aliases": [
+        "tableau",
+        "power bi",
+        "looker",
+        "dashboards"
+      ]
+    },
+    {
+      "id": "excel",
+      "name": "Excel",
+      "kind": "tool",
+      "weight": 1,
+      "aliases": [
+        "excel",
+        "spreadsheets",
+        "google sheets"
+      ]
+    },
+    {
+      "id": "aws",
+      "name": "AWS",
+      "kind": "tool",
+      "weight": 2,
+      "aliases": [
+        "aws",
+        "amazon web services",
+        "sagemaker",
+        "bedrock"
+      ]
+    },
+    {
+      "id": "gcp",
+      "name": "Google Cloud",
+      "kind": "tool",
+      "weight": 2,
+      "aliases": [
+        "gcp",
+        "google cloud",
+        "vertex ai"
+      ]
+    },
+    {
+      "id": "azure",
+      "name": "Microsoft Azure",
+      "kind": "tool",
+      "weight": 2,
+      "aliases": [
+        "azure",
+        "azure openai"
+      ]
+    },
+    {
+      "id": "cloud",
+      "name": "Cloud computing",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "cloud",
+        "cloud computing",
+        "cloud infrastructure",
+        "cloud native"
+      ]
+    },
+    {
+      "id": "docker",
+      "name": "Docker",
+      "kind": "tool",
+      "weight": 2,
+      "aliases": [
+        "docker",
+        "containers",
+        "containerization"
+      ]
+    },
+    {
+      "id": "kubernetes",
+      "name": "Kubernetes",
+      "kind": "tool",
+      "weight": 2,
+      "aliases": [
+        "kubernetes",
+        "k8s"
+      ]
+    },
+    {
+      "id": "terraform",
+      "name": "Terraform",
+      "kind": "tool",
+      "weight": 1,
+      "aliases": [
+        "terraform",
+        "infrastructure as code"
+      ]
+    },
+    {
+      "id": "ci-cd",
+      "name": "CI/CD",
+      "kind": "skill",
+      "weight": 1,
+      "aliases": [
+        "ci cd",
+        "continuous integration",
+        "continuous delivery",
+        "github actions"
+      ]
+    },
+    {
+      "id": "git",
+      "name": "Git",
+      "kind": "tool",
+      "weight": 1,
+      "aliases": [
+        "git",
+        "github",
+        "gitlab"
+      ]
+    },
+    {
+      "id": "linux",
+      "name": "Linux",
+      "kind": "tool",
+      "weight": 1,
+      "aliases": [
+        "linux",
+        "unix",
+        "bash"
+      ]
+    },
+    {
+      "id": "apis",
+      "name": "APIs",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "api",
+        "apis",
+        "restful",
+        "graphql"
+      ]
+    },
+    {
+      "id": "distributed-systems",
+      "name": "Distributed systems",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "distributed systems",
+        "scalability",
+        "high availability",
+        "microservices"
+      ]
+    },
+    {
+      "id": "system-design",
+      "name": "System design",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "system design",
+        "software architecture",
+        "architecture design"
+      ]
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "security",
+        "cybersecurity",
+        "information security",
+        "application security"
+      ]
+    },
+    {
+      "id": "privacy",
+      "name": "Data privacy and compliance",
+      "kind": "skill",
+      "weight": 1,
+      "aliases": [
+        "gdpr",
+        "data privacy",
+        "soc 2",
+        "soc2"
+      ]
+    },
+    {
+      "id": "responsible-ai",
+      "name": "Responsible AI",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "responsible ai",
+        "ai safety",
+        "ai ethics",
+        "ai governance",
+        "eu ai act"
+      ]
+    },
+    {
+      "id": "product-management",
+      "name": "Product management",
+      "kind": "skill",
+      "weight": 3,
+      "aliases": [
+        "product management",
+        "product manager",
+        "product roadmap",
+        "roadmap",
+        "product strategy"
+      ]
+    },
+    {
+      "id": "product-analytics",
+      "name": "Product analytics",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "product analytics",
+        "amplitude",
+        "mixpanel",
+        "kpis"
+      ]
+    },
+    {
+      "id": "ux",
+      "name": "User research and UX",
+      "kind": "skill",
+      "weight": 1,
+      "aliases": [
+        "user research",
+        "ux",
+        "user experience",
+        "customer discovery"
+      ]
+    },
+    {
+      "id": "agile",
+      "name": "Agile delivery",
+      "kind": "skill",
+      "weight": 1,
+      "aliases": [
+        "agile",
+        "scrum",
+        "kanban",
+        "jira"
+      ]
+    },
+    {
+      "id": "project-management",
+      "name": "Project management",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "project management",
+        "program management",
+        "delivery management"
+      ]
+    },
+    {
+      "id": "stakeholder-management",
+      "name": "Stakeholder management",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "stakeholder management",
+        "stakeholders",
+        "cross functional",
+        "executive communication"
+      ]
+    },
+    {
+      "id": "leadership",
+      "name": "Team leadership",
+      "kind": "skill",
+      "weight": 3,
+      "aliases": [
+        "leadership",
+        "people management",
+        "lead a team",
+        "managing teams",
+        "team building",
+        "hiring and developing",
+        "mentoring"
+      ]
+    },
+    {
+      "id": "strategy",
+      "name": "Strategy",
+      "kind": "skill",
+      "weight": 3,
+      "aliases": [
+        "strategy",
+        "strategic planning",
+        "business strategy",
+        "corporate strategy"
+      ]
+    },
+    {
+      "id": "go-to-market",
+      "name": "Go-to-market",
+      "kind": "skill",
+      "weight": 3,
+      "aliases": [
+        "go to market",
+        "gtm",
+        "commercialization",
+        "commercialisation",
+        "market entry"
+      ]
+    },
+    {
+      "id": "partnerships",
+      "name": "Partnerships and alliances",
+      "kind": "skill",
+      "weight": 3,
+      "aliases": [
+        "partnerships",
+        "partnership",
+        "alliances",
+        "ecosystem",
+        "partner management",
+        "channel partners"
+      ]
+    },
+    {
+      "id": "business-development",
+      "name": "Business development",
+      "kind": "skill",
+      "weight": 3,
+      "aliases": [
+        "business development",
+        "biz dev",
+        "bizdev",
+        "deal making",
+        "dealmaking"
+      ]
+    },
+    {
+      "id": "sales",
+      "name": "Enterprise sales",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "enterprise sales",
+        "b2b sales",
+        "sales cycle",
+        "pipeline generation",
+        "quota"
+      ]
+    },
+    {
+      "id": "startups",
+      "name": "Startup ecosystem",
+      "kind": "skill",
+      "weight": 3,
+      "aliases": [
+        "startup",
+        "startups",
+        "early stage",
+        "startup ecosystem",
+        "accelerator",
+        "incubator",
+        "founder community",
+        "founder programs"
+      ]
+    },
+    {
+      "id": "venture-capital",
+      "name": "Venture capital and fundraising",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "venture capital",
+        "fundraising",
+        "investors",
+        "investor relations"
+      ]
+    },
+    {
+      "id": "developer-relations",
+      "name": "Developer relations",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "developer relations",
+        "devrel",
+        "developer advocacy",
+        "developer community",
+        "developer ecosystem"
+      ]
+    },
+    {
+      "id": "community",
+      "name": "Community building",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "community building",
+        "community management",
+        "community programs"
+      ]
+    },
+    {
+      "id": "program-design",
+      "name": "Program design",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "program design",
+        "programme design",
+        "program strategy"
+      ]
+    },
+    {
+      "id": "customer-success",
+      "name": "Customer success",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "customer success",
+        "account management",
+        "customer relationships",
+        "client relationships"
+      ]
+    },
+    {
+      "id": "solutions-architecture",
+      "name": "Solutions architecture",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "solutions architect",
+        "solutions architecture",
+        "pre sales",
+        "presales",
+        "technical sales",
+        "solutions engineering"
+      ]
+    },
+    {
+      "id": "marketing",
+      "name": "Marketing",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "marketing",
+        "growth marketing",
+        "demand generation"
+      ]
+    },
+    {
+      "id": "communication",
+      "name": "Communication and public speaking",
+      "kind": "skill",
+      "weight": 1,
+      "aliases": [
+        "public speaking",
+        "communication skills",
+        "storytelling",
+        "presentations",
+        "evangelism"
+      ]
+    },
+    {
+      "id": "negotiation",
+      "name": "Negotiation",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "negotiation",
+        "negotiating",
+        "contract negotiation"
+      ]
+    },
+    {
+      "id": "financial-modeling",
+      "name": "Financial modelling",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "financial modeling",
+        "financial modelling",
+        "p l",
+        "budget ownership",
+        "budgeting",
+        "unit economics"
+      ]
+    },
+    {
+      "id": "consulting",
+      "name": "Consulting",
+      "kind": "skill",
+      "weight": 1,
+      "aliases": [
+        "consulting",
+        "management consulting",
+        "advisory"
+      ]
+    },
+    {
+      "id": "emea",
+      "name": "EMEA market experience",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "emea",
+        "europe middle east",
+        "european market",
+        "international markets"
+      ]
+    },
+    {
+      "id": "languages",
+      "name": "Additional languages",
+      "kind": "skill",
+      "weight": 1,
+      "aliases": [
+        "french",
+        "german",
+        "spanish",
+        "arabic",
+        "multilingual",
+        "bilingual"
+      ]
+    },
+    {
+      "id": "public-policy",
+      "name": "Public policy",
+      "kind": "skill",
+      "weight": 1,
+      "aliases": [
+        "public policy",
+        "government relations",
+        "public sector",
+        "regulatory"
+      ]
+    },
+    {
+      "id": "research",
+      "name": "Research",
+      "kind": "skill",
+      "weight": 2,
+      "aliases": [
+        "publications",
+        "phd",
+        "research experience",
+        "applied research"
+      ]
+    },
+    {
+      "id": "aws-cloud-practitioner",
+      "name": "AWS Certified Cloud Practitioner",
+      "kind": "cert",
+      "weight": 2,
+      "aliases": [
+        "aws certified cloud practitioner",
+        "aws cloud practitioner"
+      ]
+    },
+    {
+      "id": "aws-solutions-architect",
+      "name": "AWS Certified Solutions Architect",
+      "kind": "cert",
+      "weight": 2,
+      "aliases": [
+        "aws certified solutions architect",
+        "aws solutions architect"
+      ]
+    },
+    {
+      "id": "aws-ml",
+      "name": "AWS Certified Machine Learning",
+      "kind": "cert",
+      "weight": 2,
+      "aliases": [
+        "aws certified machine learning",
+        "aws machine learning specialty",
+        "aws certified ai practitioner"
+      ]
+    },
+    {
+      "id": "azure-ai-fundamentals",
+      "name": "Microsoft Azure AI Fundamentals",
+      "kind": "cert",
+      "weight": 2,
+      "aliases": [
+        "azure ai fundamentals",
+        "ai 900"
+      ]
+    },
+    {
+      "id": "azure-ai-engineer",
+      "name": "Microsoft Azure AI Engineer Associate",
+      "kind": "cert",
+      "weight": 2,
+      "aliases": [
+        "azure ai engineer",
+        "ai 102"
+      ]
+    },
+    {
+      "id": "gcp-ml-engineer",
+      "name": "Google Cloud Professional ML Engineer",
+      "kind": "cert",
+      "weight": 2,
+      "aliases": [
+        "professional machine learning engineer",
+        "google cloud certified"
+      ]
+    },
+    {
+      "id": "pmp",
+      "name": "PMP",
+      "kind": "cert",
+      "weight": 2,
+      "aliases": [
+        "pmp",
+        "project management professional"
+      ]
+    },
+    {
+      "id": "scrum-cert",
+      "name": "Scrum certification",
+      "kind": "cert",
+      "weight": 1,
+      "aliases": [
+        "csm",
+        "certified scrummaster",
+        "certified scrum master",
+        "psm"
+      ]
+    },
+    {
+      "id": "cissp",
+      "name": "CISSP",
+      "kind": "cert",
+      "weight": 2,
+      "aliases": [
+        "cissp"
+      ]
+    },
+    {
+      "id": "mba",
+      "name": "MBA",
+      "kind": "cert",
+      "weight": 1,
+      "aliases": [
+        "mba",
+        "master of business administration"
+      ]
+    }
+  ]
+}

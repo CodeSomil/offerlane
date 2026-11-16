@@ -15,14 +15,15 @@ final class ApplyEngine {
     let page: WebPage, job: Job, profile: Profile, answers: [(String, String)], pdf: (data: Data, name: String)?, vault: Vault
     let pace: Double
     /// Looks for a verification link from the career site (IMAP), if email tracking is on.
-    let verificationLink: (String) async -> String?
+    /// (company hint, site host) → a verified link on that site, if one arrives by email.
+    let verificationLink: (String, String) async -> String?
     var approved = false
     /// Smoke tests on real sites: fill the create-account form, then stop before clicking Create (no real account).
     var stopBeforeCreate = false
     private(set) var filledCount = 0
 
     init(page: WebPage, job: Job, profile: Profile, answers: [(String, String)], pdf: (Data, String)?, vault: Vault, pace: Double = 1,
-         verificationLink: @escaping (String) async -> String? = { _ in nil }) {
+         verificationLink: @escaping (String, String) async -> String? = { _, _ in nil }) {
         self.page = page; self.job = job; self.profile = profile; self.answers = answers; self.pdf = pdf.map { (data: $0.0, name: $0.1) }
         self.vault = vault; self.pace = pace; self.verificationLink = verificationLink
     }
@@ -116,7 +117,6 @@ final class ApplyEngine {
     static func isWorkday(_ url: String) -> Bool { Re.search("myworkdayjobs\\.com|myworkday(site)?\\.com|wd\\d+\\.myworkday", url) }
 
     func workday() async -> Outcome {
-        let host = page.host
         var last: String?, stuck = 0, uploaded = false, stuckSince: Date?
         let start = Date()
         for _ in 0..<60 {
@@ -141,6 +141,9 @@ final class ApplyEngine {
             let signIn = await page.bool("visible", ["signInContent"]), createLink = await page.bool("visible", ["createAccountLink"])
             if pwVisible || signIn || createLink {
                 let creating = await page.bool("visible", ["verifyPassword"])
+                // Passwords belong to one website: look up and save under the page's CURRENT host, so a flow that has
+                // moved elsewhere (SSO, another ATS, a hostile redirect) is never handed this site's password.
+                let host = page.host
                 let saved = vault.password(host: host)
                 if saved == nil && !approved { return .account("Create a Workday account at \(job.company) with \(email)?") }
                 if await page.bool("visible", ["SignInWithEmailButton"]), !(await page.bool("visible", ["email"])) {
@@ -167,14 +170,14 @@ final class ApplyEngine {
                     return .needsYou("Dry run: create-account form filled (email \(e), password \(a), verify \(b)); stopped before Create.")
                 }
                 do { try vault.save(host: host, company: job.company, email: email, password: pw) }   // saved BEFORE clicking Create
-                catch { return .needsYou("Couldn't save the new password to your Keychain (\(error.localizedDescription)). Create the account yourself, then press Continue.") }
+                catch { return .needsYou("Couldn't save the new password to your Keychain (\(error.plainMessage)). Create the account yourself, then press Continue.") }
                 await page.bool("typeAid", ["email", email]); await page.bool("typeAid", ["password", pw]); await page.bool("typeAid", ["verifyPassword", pw])
                 if await page.bool("visible", ["createAccountCheckbox"]), !(await page.bool("checked", ["createAccountCheckbox"])) { await page.bool("clickAid", ["createAccountCheckbox"]) }
                 let via = await page.bool("visible", ["click_filter"]) ? "click_filter" : "createAccountSubmitButton"
                 await page.bool("clickAid", [via]); await settle(4)
-                Log.info("workday account created at \(host) (password in Keychain)")
+                Log.info("workday account created (password in Keychain)")
                 if Re.search(AnswerRules.verifyRx, await page.string("text")) {
-                    if let link = await verificationLink(job.company), let u = URL(string: link) {
+                    if let link = await verificationLink(job.company, host), let u = URL(string: link), Tracking.trustedLink(link, site: host) {
                         let back = page.url; await page.load(u); await settle(3); if let back { await page.load(back) }
                     } else { return .needsYou("Workday sent a verification email to \(email). Click the link in it, then press Continue.") }
                 }
@@ -216,9 +219,12 @@ final class ApplyEngine {
 
     static let nextRx = "^(next|continue|save and continue|save & continue|proceed|next step)$"
     static let submitRx = "^(submit( application)?|send application|apply now|finish)$"
+    /// Account-creation buttons only (never "submit" or "apply").
+    static let createRx = "^(create( an| my| your)? account|sign up|register|create)$"
+    static let signInRx = "^(sign in|log ?in|continue)$"
 
     func generic(first: Bool) async -> Outcome {
-        let host = page.host; var total = 0, lastURL: String?
+        var total = 0, lastURL: String?
         for loop in 0..<14 {
             if Task.isCancelled { return .needsYou("Paused. Press Continue to carry on.") }
             await page.waitForLoad(); await pause(1.0, 1.8)
@@ -234,11 +240,12 @@ final class ApplyEngine {
             }
             let pwCount = Int((await page.call("count", ["input[type=password]"])).double ?? 0)
             if await page.bool("anyVisible", ["input[type=password]"]), !(await page.bool("anyVisible", ["input[type=file]"])) {
+                let host = page.host   // passwords are only ever typed into the site they were saved for
                 if let saved = vault.password(host: host) {
                     let acct = (try? vault.store.account(host: host))?.email ?? email
                     await page.bool("typeSel", ["input[type=email],input[name*=mail i],input[id*=mail i],input[name*=user i]", acct])
                     await page.bool("typeAllPasswords", [saved, 1])
-                    await page.bool("clickMatching", ["sign in|log ?in|continue", false]); await settle(3.5)
+                    await page.bool("clickMatching", [Self.signInRx, false]); await settle(3.5)
                     if await page.bool("anyVisible", ["input[type=password]"]) { return .needsYou("Sign-in didn't go through. Please sign in here, then press Continue.") }
                     continue
                 }
@@ -247,12 +254,18 @@ final class ApplyEngine {
                     await page.bool("clickMatching", ["create (an )?account|sign up|register|new user", true]); await settle(2.5); continue
                 }
                 if pwCount >= 2 {
+                    // Some sites combine "create account" with the application itself. Offerlane never presses a
+                    // button that would send the application: if one is on this page, the user takes over.
+                    let names = ((await page.call("buttons")).array ?? []).map { $0["name"]?.string ?? "" }
+                    guard let create = names.first(where: { Re.search(Self.createRx, $0) }), !names.contains(where: { Re.search(Self.submitRx, $0) || Re.search("submit|apply", $0) }) else {
+                        return .needsYou("This page creates an account and sends the application in one step. Fill in a password and check everything here, then click the button yourself.")
+                    }
                     let p = Keychain.strongPassword()
                     do { try vault.save(host: host, company: job.company, email: email, password: p) } catch { return .needsYou("Couldn't save the password to Keychain.") }
                     await page.bool("typeSel", ["input[type=email],input[name*=mail i],input[id*=mail i]", email])
                     await page.bool("typeAllPasswords", [p, 2])
-                    _ = await fill(consent: true, withPDF: false)
-                    await page.bool("clickMatching", ["create|sign up|register|continue|submit", false]); await settle(4)
+                    _ = await fill(consent: approved, withPDF: false)
+                    await page.bool("clickMatching", ["^\(Re.escape(create))$", false]); await settle(4)
                     if Re.search(AnswerRules.verifyRx, await page.string("text")) { return .needsYou("\(job.company) sent a verification email to \(email). Open it, then press Continue.") }
                     continue
                 }

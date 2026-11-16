@@ -1,0 +1,17 @@
+{
+  "name": "offerlane-cloud",
+  "private": true,
+  "packageManager": "pnpm@11.28.9",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test"
+  },
+  "//": "openapi-typescript (libs/contract codegen only) needs the TS 5 compiler API, which TS 7 dropped. It lives here so its typescript peer resolves to 5.9.3 from this package; every app and lib keeps tsc 7. (A pnpm override was lost on every re-resolve.)",
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3"
+  }
+}

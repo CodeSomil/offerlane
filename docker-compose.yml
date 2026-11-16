@@ -1,0 +1,13 @@
+# Local development database only (P2). Bound to localhost; trust auth is for this dev container, never a deploy.
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: offerlane
+    ports:
+      - "127.0.0.1:54329:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      retries: 30

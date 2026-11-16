@@ -13,7 +13,7 @@ struct ClaudeSignInSheet: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Sign in to Claude").font(.title2.bold())
             Text("Follow the prompts below. Your browser opens so you can sign in with your Claude account; this window closes by itself when you're done.")
-                .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                .foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
             TerminalHost(executable: executable, args: ["auth", "login"])
                 .frame(minWidth: 640, minHeight: 340)
                 .clipShape(RoundedRectangle(cornerRadius: 8))

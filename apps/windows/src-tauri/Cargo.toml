@@ -1,0 +1,28 @@
+[package]
+name = "offerlane-windows"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.99"
+publish = false
+
+[[bin]]
+name = "offerlane"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "=2.7.4", features = [] }
+
+[dependencies]
+# No common-controls-v6 (a default): it needs the comctl v6 manifest, which tauri-build links into the bin only, so the
+# `cargo test` harness would die at load on Windows (STATUS_ENTRYPOINT_NOT_FOUND). The shell shows no native dialogs.
+tauri = { version = "=2.12.5", default-features = false, features = ["wry", "compression", "dynamic-acl"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Same versions wry 0.57 (tauri 2.12.5) uses, so the COM types are the ones PlatformWebview hands out.
+[target.'cfg(windows)'.dependencies]
+webview2-com = "=0.39.1"
+windows = { version = "=0.62.2", features = ["Win32_Foundation", "Win32_Security_Credentials"] }
+
+[profile.release]
+strip = true

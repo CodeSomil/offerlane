@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup: Today</title>
+<link rel="stylesheet" href="../../../Packages/design-tokens/tokens.css">
+<link rel="stylesheet" href="mockups.css">
+<style>
+  .hero { display: flex; gap: var(--space-l); align-items: center; padding: var(--space-xl);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent-fill) 14%, var(--glass-tint)), var(--glass-tint)); }
+  .hero .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+  .hero h3 { font-size: 22px; color: var(--text-primary); margin: 4px 0 6px; letter-spacing: -.01em; }
+  .hero .actions { margin-left: auto; display: flex; gap: 8px; flex: none; }
+  .grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: var(--space-l); }
+  .ready { display: flex; gap: var(--space-l); align-items: center; }
+  .ready ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .ready li::before { content: "✓"; color: var(--offer); font-weight: 700; margin-right: 6px; }
+  .ready li.todo::before { content: "○"; color: var(--warning); }
+  .funnel { display: grid; gap: 8px; }
+  .row { display: grid; grid-template-columns: 76px 1fr 32px; align-items: center; gap: 8px; }
+  .bar { height: 18px; border-radius: 5px; background: var(--accent-fill); }
+  .row:nth-child(2) .bar { opacity: .8; } .row:nth-child(3) .bar { opacity: .65; } .row:nth-child(4) .bar { background: var(--offer); opacity: 1; }
+  .row b { font-variant-numeric: tabular-nums; text-align: right; }
+  .drop { font-size: 11px; color: var(--text-secondary); margin: -4px 0 0 84px; }
+  .iv { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--hairline); }
+  .iv:first-of-type { border-top: 0; }
+  .date { width: 46px; text-align: center; border-radius: var(--radius-m); background: var(--accent-soft); padding: 4px 0; flex: none; }
+  .date small { display: block; font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; }
+  .date b { font-size: 18px; }
+  .iv .chip { margin-left: auto; }
+</style>
+</head>
+<body>
+<header class="page-head">
+  <h1>Today</h1>
+  <p>The new home: one next action, how ready you are, this week's funnel and upcoming interviews. Demo data.</p>
+  <nav><a href="index.html">All mockups</a><a href="discover.html">Discover</a><a href="pipeline.html">Pipeline</a></nav>
+</header>
+<div class="pair">
+<section class="mac" data-active="today">
+  <main class="main">
+    <div class="head"><h2>Today</h2><span class="meta">Wednesday 11 November</span></div>
+
+    <div class="card hero">
+      <div>
+        <div class="eyebrow">Next step</div>
+        <h3>Review 4 tailored résumés</h3>
+        <div class="muted">Approve them and Offerlane fills in each form. You click Submit yourself.</div>
+      </div>
+      <div class="actions"><button class="btn">Later</button><button class="btn primary large">Review now</button></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Readiness</h3>
+        <div class="ready">
+          <div class="ring" style="--p: 80; --size: 84px; --c: var(--offer)"><span>80%</span></div>
+          <ul><li>Résumé added</li><li>AI connected</li><li>Search set up</li><li class="todo">Email tracking <a href="#" style="color: var(--accent)">Turn on</a></li></ul>
+        </div>
+      </div>
+      <div class="card">
+        <h3>This week</h3>
+        <div class="funnel" role="img" aria-label="This week: 42 matches, 12 approved, 8 applied, 3 replies">
+          <div class="row"><span>Matches</span><div class="bar" style="width: 100%"></div><b>42</b></div>
+          <div class="row"><span>Approved</span><div class="bar" style="width: 29%"></div><b>12</b></div>
+          <div class="row"><span>Applied</span><div class="bar" style="width: 19%"></div><b>8</b></div>
+          <div class="row"><span>Replies</span><div class="bar" style="width: 7%"></div><b>3</b></div>
+        </div>
+        <div class="drop" style="margin-top: 8px">3 of 8 applications answered (38%). Last week: 2 of 9.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Upcoming interviews</h3>
+      <div class="iv"><div class="date"><small>Thu</small><b>13</b></div>
+        <div><b>Senior Product Designer</b> · Harbor Health<div class="muted">14:00 · Video call · 45 min</div></div>
+        <span class="chip offer">3 STAR stories ready</span><button class="btn">Prepare</button></div>
+      <div class="iv"><div class="date"><small>Mon</small><b>17</b></div>
+        <div><b>Design Lead, Payments</b> · Quill Finance<div class="muted">10:30 · On site · 2 h</div></div>
+        <span class="chip warning">Prep not started</span><button class="btn">Prepare</button></div>
+    </div>
+  </main>
+</section>
+</div>
+<script src="mockups.js"></script>
+</body>
+</html>

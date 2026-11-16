@@ -1,0 +1,5 @@
+# Pinned, at least 14 days old at install (Protocol 7 / P4 H3). 1.100.0 was 7 days old on 2026-11-16.
+[toolchain]
+channel = "1.99.0"
+profile = "minimal"
+targets = ["x86_64-pc-windows-msvc"]

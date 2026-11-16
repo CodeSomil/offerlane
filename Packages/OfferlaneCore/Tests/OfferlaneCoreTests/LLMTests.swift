@@ -9,6 +9,16 @@ final class LLMTests: XCTestCase {
         XCTAssertEqual(try AI.decode("Sure! Here it is: {\"ok\": false} Hope that helps.", as: OK.self), OK(ok: false))
         XCTAssertEqual(try AI.decode("Result: [{\"ok\": true}]", as: [OK].self), [OK(ok: true)])
         XCTAssertThrowsError(try AI.decode("nope", as: OK.self))
+        XCTAssertEqual(try AI.decode("Thinking: weigh {skills} and {pay} first.\n{\"ok\": true}", as: OK.self), OK(ok: true), "braces in thinking text")
+    }
+
+    func testTruncatedJSONIsRepairedOrReportedPlainly() async throws {
+        let fixed = AI(client: FakeLLM(rules: [{ r in r.prompt.hasPrefix(AI.repairPrompt) ? "{\"ok\": true}" : "{\"ok\": tr" }]), store: nil)
+        let v: OK = try await fixed.json(LLMRequest(prompt: "x")); XCTAssertEqual(v, OK(ok: true))
+        let cut = AI(client: FakeLLM(rules: [{ _ in "{\"ok\": tr" }]), store: nil)
+        do { let _: OK = try await cut.json(LLMRequest(prompt: "x")); XCTFail() } catch {
+            XCTAssertTrue(error.localizedDescription.contains("couldn't be read")); XCTAssertFalse(error.localizedDescription.contains("{"))
+        }
     }
 
     func testOneRepairRetryThenFail() async throws {
@@ -81,5 +91,35 @@ final class LLMTests: XCTestCase {
 
     func testLogRedaction() {
         XCTAssertEqual(Log.redact("mail me@x.com or +44 7700 900000 key sk-ant-abc_123"), "mail <email> or <phone> key <key>")
+    }
+
+    func testOllamaRequestSetsContextAndThinkPerRequest() throws {
+        XCTAssertEqual(OllamaClient.contextLength(ramBytes: 8 << 30), 8192)
+        XCTAssertEqual(OllamaClient.contextLength(ramBytes: 16 << 30), 16384)
+        let c = OllamaClient(baseURL: URL(string: "http://localhost:11434/v1")!, modelFast: "small", modelSmart: "big", contextLength: 8192)
+        let req = try c.request(LLMRequest(prompt: "hi", smart: true, maxTokens: 300))
+        XCTAssertEqual(req.url?.absoluteString, "http://localhost:11434/api/chat")
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: XCTUnwrap(req.httpBody)) as? [String: Any])
+        XCTAssertEqual(body["model"] as? String, "big")
+        XCTAssertEqual(body["think"] as? Bool, false)
+        XCTAssertEqual(body["stream"] as? Bool, false)
+        let options = try XCTUnwrap(body["options"] as? [String: Any])
+        XCTAssertEqual(options["num_ctx"] as? Int, 8192)
+        XCTAssertEqual(options["num_predict"] as? Int, 300)
+        let noThink = try JSONSerialization.jsonObject(with: XCTUnwrap(c.request(LLMRequest(prompt: "hi"), sendThink: false).httpBody)) as? [String: Any]
+        XCTAssertNil(noThink?["think"])
+    }
+
+    func testOllamaReplyAndErrors() async throws {
+        MockReleaseServer.reset(); defer { MockReleaseServer.reset() }
+        let session = URLSession(configuration: MockReleaseServer.config())
+        let reply = #"{"message":{"role":"assistant","content":"<think>x</think>{\"ok\": true}"},"prompt_eval_count":12,"eval_count":3}"#
+        MockReleaseServer.route("http://a.test/api/chat", .file(Data(reply.utf8)))
+        let r = try await OllamaClient(baseURL: URL(string: "http://a.test")!, modelFast: "m", modelSmart: "m", session: session).complete(LLMRequest(prompt: "hi"))
+        XCTAssertEqual(r.text, #"{"ok": true}"#)
+        XCTAssertEqual(r.usage, LLMUsage(input: 12, output: 3))
+        MockReleaseServer.route("http://b.test/api/chat", .status(404))
+        do { _ = try await OllamaClient(baseURL: URL(string: "http://b.test")!, modelFast: "m", modelSmart: "m", session: session).complete(LLMRequest(prompt: "hi")); XCTFail() }
+        catch { XCTAssertTrue(error.localizedDescription.contains("Download it in Settings")) }
     }
 }

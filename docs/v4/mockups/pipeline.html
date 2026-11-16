@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup: Pipeline</title>
+<link rel="stylesheet" href="../../../Packages/design-tokens/tokens.css">
+<link rel="stylesheet" href="mockups.css">
+<style>
+  .board { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)) 34px; gap: 10px; align-items: start; }
+  .col { display: grid; gap: 8px; padding: 8px; border-radius: var(--radius-l); background: var(--surface-sunken); min-height: 420px; align-content: start; }
+  .col h3 { margin: 2px 4px 2px; font-size: 12px; font-weight: 700; color: var(--text-secondary); display: flex; justify-content: space-between; }
+  .collapsed { min-height: 420px; border-radius: var(--radius-l); background: var(--surface-sunken); writing-mode: vertical-rl; display: flex; align-items: center;
+    justify-content: flex-start; padding: 12px 0; font-size: 12px; font-weight: 600; color: var(--text-secondary); gap: 6px; }
+  .tile { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-m); padding: 10px; display: grid; gap: 6px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .06); }
+  .tile b { font-size: 12.5px; line-height: 1.25; }
+  .tile .co { font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; margin-top: -2px; }
+  .tile .mono { width: 18px; height: 18px; font-size: 8.5px; border-radius: 5px; }
+  .tile .chip { justify-self: start; }
+  .tile .next { font-size: 11.5px; border-top: 1px solid var(--hairline); padding-top: 6px; }
+  .tile .next::before { content: "Next: "; font-weight: 700; color: var(--accent); }
+  .tile.stale { border-color: color-mix(in srgb, var(--warning) 45%, var(--hairline)); }
+  .tile.drag { transform: rotate(-2deg); box-shadow: 0 12px 28px rgba(15, 23, 42, .22); outline: 2px solid var(--accent); }
+  .drop-hint { border: 2px dashed color-mix(in srgb, var(--accent) 50%, transparent); border-radius: var(--radius-m); height: 44px; }
+  /* The offer moment: the lane ends in the offer green, nothing louder than that. */
+  .tile.offer { border: 1px solid color-mix(in srgb, var(--offer) 55%, transparent); position: relative; overflow: hidden;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--offer) 12%, var(--surface)), var(--surface) 70%); }
+  .tile.offer::after { content: ""; position: absolute; right: -18px; top: -18px; width: 64px; height: 64px; border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--offer) 35%, transparent), transparent 70%); }
+  .tile.offer .badge { font-size: 11px; justify-self: start; font-weight: 700; color: var(--offer); display: flex; align-items: center; gap: 4px; }
+  .tile.offer .badge::before { content: "✓"; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--offer); color: var(--surface); font-size: 10px; }
+</style>
+</head>
+<body>
+<header class="page-head">
+  <h1>Pipeline</h1>
+  <p>Every application in one place: compact cards with their age, a warning when one goes quiet, one clear next step, drag to move, empty stages folded away, and a calm offer moment. Demo data.</p>
+  <nav><a href="index.html">All mockups</a><a href="today.html">Today</a><a href="discover.html">Discover</a></nav>
+</header>
+<div class="pair">
+<section class="mac" data-active="pipeline">
+  <main class="main">
+    <div class="head"><h2>Pipeline</h2><span class="meta">9 applications · 1 needs a follow-up</span>
+      <div class="right"><button class="btn">List view</button></div></div>
+    <div class="board">
+      <div class="col"><h3>Approved <span>3</span></h3>
+        <div class="tile"><b>Product Designer, Growth</b><div class="co"><span class="mono" style="background: #B45309">FS</span>Fieldstone · today</div>
+          <div class="next">Check the filled form</div></div>
+        <div class="tile drag"><b>UX Designer</b><div class="co"><span class="mono" style="background: #0369A1">LL</span>Lumen Labs · 1 day</div>
+          <div class="next">Submit on the career site</div></div>
+        <div class="tile"><b>Design Systems Lead</b><div class="co"><span class="mono" style="background: #7C3AED">BP</span>Brightpath · 2 days</div>
+          <div class="next">Review the tailored résumé</div></div>
+      </div>
+      <div class="col"><h3>Applied <span>4</span></h3>
+        <div class="drop-hint" aria-label="Drop here"></div>
+        <div class="tile stale"><b>Senior UX Researcher</b><div class="co"><span class="mono" style="background: #BE123C">NW</span>Northwind · 16 days</div>
+          <span class="chip warning">No reply in 16 days</span>
+          <div class="next">Send a short follow-up</div></div>
+        <div class="tile"><b>Design Lead, Payments</b><div class="co"><span class="mono" style="background: #4338CA">QF</span>Quill Finance · 6 days</div>
+          <div class="next">Wait; replies usually come in 7–10 days</div></div>
+        <div class="tile"><b>Product Designer</b><div class="co"><span class="mono" style="background: #15803D">GV</span>Greenvale · 3 days</div>
+          <div class="next">Nothing to do yet</div></div>
+      </div>
+      <div class="col"><h3>Interviewing <span>2</span></h3>
+        <div class="tile"><b>Senior Product Designer</b><div class="co"><span class="mono" style="background: #0F766E">HH</span>Harbor Health · 12 days</div>
+          <span class="chip info">Interview Thu 13 Nov</span>
+          <div class="next">Prepare 3 STAR stories</div></div>
+        <div class="tile"><b>Lead Designer</b><div class="co"><span class="mono" style="background: #9333EA">OR</span>Orbital · 20 days</div>
+          <div class="next">Send thank-you note</div></div>
+      </div>
+      <div class="col"><h3>Offer <span>1</span></h3>
+        <div class="tile offer"><b>Principal Designer</b><div class="co"><span class="mono" style="background: #0E7490">AT</span>Atlas Travel · 28 days</div>
+          <div class="badge">Offer received · €104k base</div>
+          <div class="next">Compare offers before Fri 20 Nov</div></div>
+      </div>
+      <div class="collapsed" title="Closed: 0 (folded because it's empty)">Closed · 0</div>
+    </div>
+  </main>
+</section>
+</div>
+<script src="mockups.js"></script>
+</body>
+</html>

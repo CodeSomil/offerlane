@@ -1,0 +1,15 @@
+[
+  {"why": "a number not in the resume is rejected", "new": "Made up claim with 999 users.", "source": "Built a demand forecasting system covering 1,200 products, cutting error by 30%. Python, SQL.", "ok": false, "warnings": ["numbers not in your resume: [\"999\"]"]},
+  {"why": "numbers already present pass, comma-insensitive", "new": "Forecasting for 1200 products cut error 30%", "source": "Built a demand forecasting system covering 1,200 products, cutting error by 30%. Python, SQL.", "ok": true, "warnings": []},
+  {"why": "new tools are flagged, the sentence's first capitalised word is skipped", "new": "Built forecasting in Python with Kubernetes and Terraform", "source": "Built a demand forecasting system covering 1,200 products, cutting error by 30%. Python, SQL.", "ok": true, "warnings": ["new terms, check they are true: [\"Kubernetes\", \"Terraform\"]"]},
+  {"why": "digits inside a new term count as a new number, as in the prototype", "new": "Used GPT4 for forecasting", "source": "Built a demand forecasting system covering 1,200 products, cutting error by 30%. Python, SQL.", "ok": false, "warnings": ["numbers not in your resume: [\"4\"]"]},
+  {"why": "several new numbers are listed sorted as strings", "new": "Grew revenue 12% across 9 markets in 2.5 years", "source": "Grew revenue across markets.", "ok": false, "warnings": ["numbers not in your resume: [\"12\", \"2.5\", \"9\"]"]},
+  {"why": "a decimal comma number is compared without its comma", "new": "Saved 1,5 hours a day", "source": "Saved 15 hours a week", "ok": true, "warnings": []},
+  {"why": "a trailing dot on a known term is ignored", "new": "Shipped it with Python.", "source": "python and sql", "ok": true, "warnings": []},
+  {"why": "only the first capitalised word is skipped: a later sentence start is flagged", "new": "Shipped with Python. Also SQL.", "source": "python and sql", "ok": true, "warnings": ["new terms, check they are true: [\"Also\"]"]},
+  {"why": "C++ and C# match the source vocabulary", "new": "Wrote services in C++ and C#", "source": "Languages: c++, c#", "ok": true, "warnings": []},
+  {"why": "a repeated new term is flagged once", "new": "Moved Airflow jobs; Airflow and Dagster", "source": "moved jobs", "ok": true, "warnings": ["new terms, check they are true: [\"Airflow\", \"Dagster\"]"]},
+  {"why": "full-width and Arabic-Indic digits are numbers too (ICU \\d is every decimal digit)", "new": "Grew revenue ９９９% to ٣٠٠ users", "source": "Grew revenue", "ok": false, "warnings": ["numbers not in your resume: [\"٣٠٠\", \"９９９\"]"]},
+  {"why": "a non-ASCII number already in the source passes", "new": "Served ٣٠٠ stores", "source": "Served ٣٠٠ stores across the region", "ok": true, "warnings": []},
+  {"why": "empty text passes", "new": "", "source": "anything", "ok": true, "warnings": []}
+]

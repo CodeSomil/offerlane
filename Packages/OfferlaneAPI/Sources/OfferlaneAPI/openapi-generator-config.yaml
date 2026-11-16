@@ -1,0 +1,4 @@
+# openapi.json is a symlink to libs/contract/openapi.json (the committed, drift-checked spec).
+generate: [types, client]
+accessModifier: public
+namingStrategy: idiomatic

@@ -113,17 +113,46 @@ public struct Tracking: Sendable {
     }
 
     /// Newest account-verification link or code from a career site, matched by a hint (company name or "workday").
-    public static func verification(in mails: [MailMessage], hint: String) -> (link: String?, code: String?)? {
+    /// `mails` must be oldest first. With `site` (the host of the application being filled), a link is returned only
+    /// when it is HTTPS on that site or on Workday, and the email came from that site or Workday: anyone can send an
+    /// email that mentions a company, so a planted link must never be opened in the signed-in apply browser.
+    public static func verification(in mails: [MailMessage], hint: String, site: String? = nil) -> (link: String?, code: String?)? {
         for m in mails.reversed() {
             let h = hint.lowercased()
             guard (m.from + m.subject).lowercased().contains(h) || String(m.raw.prefix(3000)).lowercased().contains(h) else { continue }
             guard Re.search("verif|activat|confirm", m.subject + String(m.raw.prefix(4000))) else { continue }
+            if let site, !trustedSender(m.from, site: site) { continue }
             let raw = Mime.quotedPrintable(m.raw)
-            let link = Re.groups("https?://[^\\s\"'<>]*(verif|activat|confirm)[^\\s\"'<>]*", raw)?.first ?? nil
+            let links = Re.findAll("(https?://[^\\s\"'<>]*(?:verif|activat|confirm)[^\\s\"'<>]*)", raw)
+            let link = site.map { s in links.first { trustedLink($0, site: s) } } ?? links.first
             let code = Re.groups("\\b(code|verification code)\\D{0,20}(\\d{4,8})\\b", raw)?[2] ?? nil
+            if site != nil && link == nil && code == nil { continue }
             return (link, code)
         }
         return nil
+    }
+
+    static let workdayDomains = ["myworkday.com", "myworkdayjobs.com", "myworkdaysite.com", "workday.com"]
+
+    /// "jobs.acme.co.uk" → "acme.co.uk"; "wd5.myworkdayjobs.com" → "myworkdayjobs.com".
+    public static func siteDomain(_ host: String) -> String {
+        let parts = host.lowercased().split(separator: ".").map(String.init)
+        guard parts.count > 2 else { return parts.joined(separator: ".") }
+        let twoPartTLD = ["co.uk", "org.uk", "ac.uk", "com.au", "co.in", "co.jp", "com.br", "co.nz", "com.sg"]
+        let lastTwo = parts.suffix(2).joined(separator: ".")
+        return (twoPartTLD.contains(lastTwo) ? parts.suffix(3) : parts.suffix(2)).joined(separator: ".")
+    }
+    static func trusted(_ host: String, site: String) -> Bool {
+        let d = siteDomain(host)
+        return d == siteDomain(String(site.split(separator: ":").first ?? "")) || workdayDomains.contains(d)
+    }
+    public static func trustedLink(_ link: String, site: String) -> Bool {
+        guard let u = URL(string: link), u.scheme?.lowercased() == "https", let h = u.host, u.user == nil else { return false }
+        return trusted(h, site: site)
+    }
+    static func trustedSender(_ from: String, site: String) -> Bool {
+        guard let addr = Re.groups("@([A-Za-z0-9.-]+)", from)?[1] else { return false }
+        return trusted(addr, site: site)
     }
 
     /// IMAP fetch of the last `days` days (newest 300), read-only.

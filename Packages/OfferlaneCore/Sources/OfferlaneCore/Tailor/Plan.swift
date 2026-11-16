@@ -76,8 +76,9 @@ public enum PlanApplier {
     }
 
     /// Token-lean bullet bank for prompts (ids + text).
-    public static func compact(_ v: ResumeVersion) -> String {
-        let r = v.content
+    public static func compact(_ v: ResumeVersion) -> String { compact(v.content) }
+
+    public static func compact(_ r: ResumeContent) -> String {
         var out = ["HEADLINE: \(r.headline)", "SUMMARY: \(r.summary)"]
         for sec in r.sections {
             let who = sec.company.isEmpty ? sec.name : sec.company
@@ -103,7 +104,8 @@ public enum PlanApplier {
             secs.map { sec in
                 var sec = sec
                 let byID = Dictionary(sec.bullets.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-                let ids = (plan.order[sec.id] ?? sec.bullets.map(\.id)).filter { byID[$0] != nil }
+                var seen = Set<String>() // an AI order that repeats an id must not print the bullet twice
+                let ids = (plan.order[sec.id] ?? sec.bullets.map(\.id)).filter { byID[$0] != nil && seen.insert($0).inserted }
                 sec.bullets = ids.map { id in
                     var b = byID[id]!; b.original = b.text
                     if let new = plan.rewrites[id]?.trimmingCharacters(in: .whitespacesAndNewlines), !new.isEmpty, new != b.text {

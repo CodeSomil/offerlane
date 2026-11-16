@@ -18,20 +18,27 @@ final class ApplyController {
 
     init(app: AppModel) { self.app = app }
 
+    /// Signing out: stop work and clear the page so nothing from this profile stays on screen.
+    func stopForSignOut() {
+        engineTask?.cancel(); watcher?.cancel(); running = false; currentID = nil
+        page.web.stopLoading(); page.web.loadHTMLString("", baseURL: nil)
+    }
+
     var job: Job? { currentID.flatMap { try? app?.store.job($0) } }
 
     /// Pick up the next approved role if nothing is in the window.
     func next() {
         guard let app, currentID == nil || job.map({ $0.status.isTracked || $0.status.isHidden }) == true else { return }
         currentID = nil
-        guard let j = app.jobs(.ready).sorted(by: { $0.updated < $1.updated }).first else { return }
+        // Read the store directly: the published snapshot refreshes asynchronously.
+        guard let j = ((try? app.store.jobs([.ready])) ?? []).sorted(by: { $0.updated < $1.updated }).first else { return }
         start(j.id)
     }
 
     func start(_ id: String) {
         guard let app, let j = try? app.store.job(id) else { return }
         currentID = id; openWindow?()
-        guard let url = URL(string: AnswerRules.formURL(j)) else { finish(.needsYou("This role has no application link. Open the posting yourself.")); return }
+        guard let url = URL.web(AnswerRules.formURL(j)) else { finish(.needsYou("This role has no application link. Open the posting yourself.")); return }
         engineTask?.cancel()
         engineTask = Task {
             // Per-site cool-down: never two applications on the same site back to back.
@@ -53,10 +60,10 @@ final class ApplyController {
         let answers = AnswerRules.parseAnswers((try? String(contentsOf: dir.appendingPathComponent("answers.md"), encoding: .utf8)) ?? "")
         let pdfURL = ((try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)) ?? []).first { $0.pathExtension == "pdf" }
         let pdf = pdfURL.flatMap { u in (try? Data(contentsOf: u)).map { ($0, u.lastPathComponent) } }
-        let fast = ProcessInfo.processInfo.environment["OFFERLANE_FAST_PACE"] == "1"
+        let fast = TestHooks.env["OFFERLANE_FAST_PACE"] == "1"
         return ApplyEngine(page: page, job: j, profile: (try? app.store.profile()) ?? Profile(), answers: answers, pdf: pdf,
                            vault: Vault(store: app.store, keychain: app.keychain), pace: fast ? 0.1 : 1,
-                           verificationLink: { [weak app] hint in await app?.verificationLink(hint) })
+                           verificationLink: { [weak app] hint, site in await app?.verificationLink(hint, site: site) })
     }
 
     private func runEngine(first: Bool) async {
@@ -104,7 +111,9 @@ final class ApplyController {
     }
     func dontApply() {
         guard let app, let id = currentID else { return }
+        let old = (try? app.store.job(id))??.status ?? .account
         engineTask?.cancel(); _ = try? app.store.transition(id, to: .declined, by: "you", detail: "don't apply"); app.refresh(); currentID = nil; next()
+        app.toast = Toast(message: "Skipped this application.", undoLabel: "Undo") { [weak app] in app?.restoreStatus(id, to: old) }
     }
     func pause() {
         engineTask?.cancel(); running = false
@@ -122,7 +131,7 @@ final class ApplyController {
     /// Open a role that is waiting on the user (from To Do) without re-running the agent.
     func show(_ id: String) {
         if currentID == id { openWindow?(); return }
-        guard let j = try? app?.store.job(id), let url = URL(string: AnswerRules.formURL(j)) else { return }
+        guard let j = try? app?.store.job(id), let url = URL.web(AnswerRules.formURL(j)) else { return }
         engineTask?.cancel(); currentID = id; openWindow?()
         Task { await page.load(url) }
         startWatcher()
@@ -172,10 +181,10 @@ private struct ApplyBanner: View {
     var body: some View {
         let j = controller.job
         HStack(alignment: .center, spacing: 12) {
-            Image(systemName: icon(j?.status)).font(.title2).foregroundStyle(.tint)
+            Image(systemName: icon(j?.status)).font(.title2).foregroundStyle(.tint).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 Text(j.map { "\($0.company) – \($0.title)" } ?? "No application open").font(.headline)
-                Text(text(j)).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                Text(text(j)).font(.callout).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
             }
             Spacer()
             if controller.running { ProgressView().controlSize(.small); Button("Pause") { controller.pause() } }
@@ -188,7 +197,7 @@ private struct ApplyBanner: View {
                 if s == .prefilled { Button("I Submitted It") { controller.markSubmitted() }.buttonStyle(.borderedProminent) }
                 else { Button("I Submitted It") { controller.markSubmitted() } }
             }
-            Button { controller.openInSafari() } label: { Image(systemName: "safari") }.help("Open in Safari").disabled(controller.page.url == nil)
+            Button { controller.openInSafari() } label: { Image(systemName: "safari") }.help("Open in Safari").accessibilityLabel("Open in Safari").disabled(controller.page.url == nil)
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
         .background(.bar)

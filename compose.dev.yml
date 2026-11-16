@@ -1,0 +1,21 @@
+# LOCAL ONLY overlay for compose.preview.yml: a dev OIDC issuer (apps/api/test/devIssuer.ts) instead of a real provider.
+# The api joins the issuer's network namespace, so it reaches the issuer as http://localhost (auth.ts allows only that over http).
+# The issuer owns the published ports: 8787 = api, 9000 = issuer (GET /token?sub=… hands out tokens). Never deploy this file.
+services:
+  issuer:
+    build: { context: ., target: devissuer }
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    ports: ["127.0.0.1:${API_PORT:-8787}:8787", "127.0.0.1:${ISSUER_PORT:-9000}:9000"]
+    environment:
+      WEB_ORIGINS: http://localhost:5173,http://127.0.0.1:4173
+  api:
+    network_mode: service:issuer
+    ports: !reset []
+    environment:
+      OIDC_ALLOW_LOCAL_HTTP: "1"
+      OIDC_ISSUER: http://localhost:9000/
+      OIDC_AUDIENCE: offerlane-api
+      WEB_ORIGINS: http://localhost:5173,http://127.0.0.1:4173

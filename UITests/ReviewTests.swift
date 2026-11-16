@@ -8,6 +8,7 @@ final class ReviewTests: XCTestCase {
         for dark in [false, true] {
             let mode = dark ? "dark" : "light"
             let app = XCUIApplication()
+            app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]   // never block on "reopen windows?"
             app.launchEnvironment["OFFERLANE_HOME"] = NSTemporaryDirectory() + "offerlane-ui-" + UUID().uuidString
             app.launchEnvironment["OFFERLANE_FAKE_AI"] = "1"
             app.launchEnvironment["OFFERLANE_ONBOARDED"] = "1"
@@ -17,6 +18,7 @@ final class ReviewTests: XCTestCase {
 
             XCTAssertTrue(app.staticTexts["Senior Data Scientist, Forecasting"].waitForExistence(timeout: 10))
             app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'approve.'")).firstMatch.click()
+            app.typeKey("3", modifierFlags: .command)   // ⌘3 → Review
             let open = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'review.open.'")).firstMatch
             XCTAssertTrue(open.waitForExistence(timeout: 30), "tailored in the background and waiting for review")
             open.click()
@@ -25,6 +27,11 @@ final class ReviewTests: XCTestCase {
             XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "value BEGINSWITH 'Tailored: Reworded:'")).firstMatch.exists, "tailored text shown")
             XCTAssertTrue(app.staticTexts["ATS check passed"].exists)
             snap(app, "review-\(mode)")
+
+            app.buttons["review.edit"].click()
+            XCTAssertTrue(app.buttons["Cancel"].waitForExistence(timeout: 5))
+            app.buttons["Cancel"].click()
+            XCTAssertTrue(app.buttons["review.approve"].waitForExistence(timeout: 5), "Cancel leaves edit mode")
 
             app.buttons["review.edit"].click()
             XCTAssertTrue(app.buttons["Rebuild PDF"].waitForExistence(timeout: 5))

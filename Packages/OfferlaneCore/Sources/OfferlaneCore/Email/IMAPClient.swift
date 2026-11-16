@@ -21,7 +21,8 @@ public actor IMAPClient {
 
     public func connect(timeout: TimeInterval = 20) async throws {
         let params: NWParameters = tls ? .tls : .tcp
-        let c = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(rawValue: port)!, using: params)
+        guard let p = NWEndpoint.Port(rawValue: port), port > 0 else { throw IMAPError.connect("That port number isn't valid. Use 993 for most email providers.") }
+        let c = NWConnection(host: NWEndpoint.Host(host), port: p, using: params)
         conn = c
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
             let once = ProcessRunner.Once()
@@ -83,6 +84,8 @@ public actor IMAPClient {
             var line = try await readLine()
             // A line ending in {n} is followed by n raw bytes, then the rest of the line.
             while let n = Int(Re.first("\\{(\\d+)\\}$", line, []) ?? "") {
+                // Offerlane fetches headers and short snippets; a server announcing more than 16 MB is refused.
+                guard n >= 0, n <= 16 << 20 else { throw IMAPError.protocolError("a message part was larger than expected") }
                 literals.append(try await readBytes(n))
                 line += "<literal>" + (try await readLine())
             }

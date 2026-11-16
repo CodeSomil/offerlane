@@ -134,7 +134,7 @@ public enum LaTeXRender {
     }
 
     public static var tectonic: URL? {
-        let env = ProcessInfo.processInfo.environment["OFFERLANE_TECTONIC"].map { URL(fileURLWithPath: $0) }
+        let env = TestHooks.env["OFFERLANE_TECTONIC"].map { URL(fileURLWithPath: $0) }
         let bundled = Bundle.main.url(forAuxiliaryExecutable: "tectonic") ?? Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/tectonic")
         // Development and tests point OFFERLANE_TECTONIC at Vendor/tectonic/bin/tectonic; shipped apps use the bundled copy.
         return [env, bundled].compactMap { $0 }.first { FileManager.default.isExecutableFile(atPath: $0.path) }
@@ -145,7 +145,7 @@ public enum LaTeXRender {
         let dir = Paths.root.appendingPathComponent("tectonic-cache", isDirectory: true)
         if !FileManager.default.fileExists(atPath: dir.path) {
             let seeds = [Bundle.main.resourceURL?.appendingPathComponent("TectonicCache"),
-                         ProcessInfo.processInfo.environment["OFFERLANE_TECTONIC_CACHE"].map { URL(fileURLWithPath: $0) }]
+                         TestHooks.env["OFFERLANE_TECTONIC_CACHE"].map { URL(fileURLWithPath: $0) }]
             if let seed = seeds.compactMap({ $0 }).first(where: { FileManager.default.fileExists(atPath: $0.path) }) {
                 try? FileManager.default.createDirectory(at: dir.deletingLastPathComponent(), withIntermediateDirectories: true)
                 try? FileManager.default.copyItem(at: seed, to: dir)

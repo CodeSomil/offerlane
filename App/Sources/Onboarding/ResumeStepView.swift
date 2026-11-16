@@ -23,14 +23,16 @@ struct ResumeStepView: View {
     private var importCard: some View {
         GroupBox {
             HStack(alignment: .top, spacing: 12) {
-                Image(systemName: "square.and.arrow.down.on.square").font(.title2).foregroundStyle(Color.accentColor)
+                Image(systemName: "square.and.arrow.down.on.square").font(.title2).foregroundStyle(Color.accentColor).accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Your data from the previous version was found").font(.headline)
                     Text("Import your resume versions, profile, companies and tracked roles from the previous version of the app.")
-                        .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                    if model.importing { StatusLine(kind: .working, text: "Importing…") }
+                        .font(.callout).foregroundStyle(DS.Palette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     if let r = model.importReport { StatusLine(kind: .ok, text: r) }
-                    if let e = model.importError { StatusLine(kind: .error, text: e) }
+                    if let e = model.importError {
+                        // Still running past the timeout: no Try Again until it ends.
+                        if model.importing { StatusLine(kind: .error, text: e) } else { ErrorRow(text: e, action: "Try Again") { model.importLegacy() } }
+                    } else if model.importing { StatusLine(kind: .working, text: "Importing…") }
                 }
                 Spacer()
                 if model.importReport == nil { Button("Import") { model.importLegacy() }.buttonStyle(.borderedProminent).disabled(model.importing) }
@@ -40,9 +42,9 @@ struct ResumeStepView: View {
 
     private var dropZone: some View {
         VStack(spacing: 10) {
-            Image(systemName: "doc.badge.plus").font(.system(size: 34)).foregroundStyle(Color.accentColor)
+            Image(systemName: "doc.badge.plus").font(.system(size: 34)).foregroundStyle(Color.accentColor).accessibilityHidden(true)
             Text("Drop resume files here").font(.headline)
-            Text("PDF, Word (.docx), text or LaTeX (.tex) · up to 10 MB").font(.callout).foregroundStyle(.secondary)
+            Text("PDF, Word (.docx), text or LaTeX (.tex) · up to 10 MB").font(.callout).foregroundStyle(DS.Palette.textSecondary)
             Button("Choose Files…") {
                 if let files = model.testFiles { model.add(urls: files) } else { importing = true }
             }
@@ -66,22 +68,22 @@ private struct UploadCard: View {
         GroupBox {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 12) {
-                    Image(systemName: icon).font(.title2).foregroundStyle(.secondary).frame(width: 28)
+                    Image(systemName: icon).font(.title2).foregroundStyle(DS.Palette.textSecondary).frame(width: 28).accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
                         TextField("Version name", text: $upload.label)
                             .textFieldStyle(.plain).font(.headline)
                             .onSubmit { model.save(upload) }
                             .accessibilityLabel("Version name for \(upload.filename)")
-                        Text(upload.filename).font(.caption).foregroundStyle(.secondary)
+                        Text(upload.filename).font(.caption).foregroundStyle(DS.Palette.textSecondary)
                     }
                     Spacer()
                     if upload.version?.isDefault == true {
-                        Label("Default", systemImage: "star.fill").font(.caption.weight(.semibold)).foregroundStyle(.orange)
+                        Label("Default", systemImage: "star.fill").font(.caption.weight(.semibold)).foregroundStyle(DS.Palette.warning)
                     } else if upload.state == .done {
                         Button("Make Default") { model.makeDefault(upload) }.controlSize(.small)
                     }
                     Button(role: .destructive) { confirmRemove = true } label: { Image(systemName: "trash") }
-                        .buttonStyle(.borderless).help("Remove this resume")
+                        .buttonStyle(.borderless).help("Remove this resume").accessibilityLabel("Remove this resume")
                         .accessibilityLabel("Remove \(upload.label)")
                 }
                 switch upload.state {
@@ -157,13 +159,13 @@ private struct SectionEditor: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(section.heading.isEmpty ? section.id : section.heading).font(.subheadline.weight(.semibold))
-                + Text(section.dates.isEmpty ? "" : "  ·  \(section.dates)").font(.caption).foregroundColor(.secondary)
+                + Text(section.dates.isEmpty ? "" : "  ·  \(section.dates)").font(.caption).foregroundStyle(DS.Palette.textSecondary)
             ForEach($section.bullets) { $b in
                 HStack(alignment: .top) {
-                    Text("•").foregroundStyle(.secondary)
+                    Text("•").foregroundStyle(DS.Palette.textSecondary)
                     TextField("Bullet", text: $b.text, axis: .vertical)
                     Button { section.bullets.removeAll { $0.id == b.id } } label: { Image(systemName: "minus.circle") }
-                        .buttonStyle(.borderless).foregroundStyle(.secondary).help("Remove this bullet")
+                        .buttonStyle(.borderless).foregroundStyle(DS.Palette.textSecondary).help("Remove this bullet").accessibilityLabel("Remove this bullet")
                         .accessibilityLabel("Remove bullet")
                 }
             }

@@ -47,6 +47,6 @@
   <path d="M 496 298 L 532 334 L 602 262" fill="none" stroke="#FFFFFF" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
   <text x="490" y="300" font-family="-apple-system, 'SF Pro Display', Helvetica, Arial, sans-serif" font-size="110" font-weight="700" letter-spacing="-2" fill="#F9FAFB">Offerlane</text>
-  <text x="494" y="370" font-family="-apple-system, 'SF Pro Text', Helvetica, Arial, sans-serif" font-size="31" font-weight="500" fill="#CBD5E1">Find roles, tailor your résumé, prefill applications.</text>
-  <text x="494" y="420" font-family="-apple-system, 'SF Pro Text', Helvetica, Arial, sans-serif" font-size="31" font-weight="500" fill="#CBD5E1">You approve every step. Native macOS, open source.</text>
+  <text x="494" y="370" font-family="-apple-system, 'SF Pro Text', Helvetica, Arial, sans-serif" font-size="31" font-weight="500" fill="#CBD5E1">Your lane to what&#8217;s next.</text>
+  <text x="494" y="420" font-family="-apple-system, 'SF Pro Text', Helvetica, Arial, sans-serif" font-size="31" font-weight="500" fill="#CBD5E1">Your private career companion.</text>
 </svg>

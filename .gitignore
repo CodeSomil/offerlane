@@ -9,11 +9,23 @@ Packages/OfferlaneCore/.swiftpm/
 Vendor/tectonic/bin/
 Vendor/tectonic/cache/
 Packages/OfferlaneCore/Tests/OfferlaneCoreTests/Fixtures/private/
-# Never commit personal data
-*.sqlite
-*.sqlite-*
-profile.json
-!Packages/OfferlaneCore/Tests/**/answers_expected.json
-.env
-*.p12
-*.mobileprovision
+/Packages/OfferlaneCore/models.json
+node_modules/
+Packages/OfferlaneAPI/.swiftpm/
+apps/web/test-results/
+apps/web/playwright-report/
+apps/extension/dist-test/
+apps/extension/dist-dev/
+apps/extension/test-results/
+
+# Local working notes: build playbooks, session handoffs, old private plans and reports. Kept on disk, never published.
+/OFFERLANE.md
+/OFFERLANE_V4.md
+/docs/PROGRESS.md
+/docs/ENHANCEMENT_PROMPT.md
+/docs/ENHANCE_PLAN.md
+/docs/PLAN.md
+/docs/TOKEN_REPORT.md
+/docs/LICENSE_OPTIONS.md
+/docs/SECURITY_REVIEW.md
+/docs/TEST_REPORT.md
