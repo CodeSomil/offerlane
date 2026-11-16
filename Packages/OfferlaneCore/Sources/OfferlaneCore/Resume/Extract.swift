@@ -45,11 +45,21 @@ public enum Extract {
     }
 
     public static func docx(_ data: Data) throws -> String {
-        guard let archive = try? Archive(data: data, accessMode: .read), let entry = archive["word/document.xml"] else {
+        guard let archive = try? Archive(data: data, accessMode: .read, pathEncoding: nil), let entry = archive["word/document.xml"] else {
             throw ResumeImportError("Couldn't open that Word file. Save it again as .docx (or PDF) and try again.")
         }
+        // A resume's document.xml is well under a megabyte; refuse "zip bombs" that expand to gigabytes.
+        let limit = 25 << 20
+        guard entry.uncompressedSize <= UInt64(limit) else {
+            throw ResumeImportError("That Word file is far larger than a resume should be. Save it again as .docx (or PDF) and try again.")
+        }
         var xml = Data()
-        do { _ = try archive.extract(entry, skipCRC32: true) { xml.append($0) } } catch {
+        struct TooBig: Error {}
+        do {
+            _ = try archive.extract(entry, skipCRC32: true) { chunk in
+                xml.append(chunk); if xml.count > limit { throw TooBig() }
+            }
+        } catch {
             throw ResumeImportError("Couldn't read that Word file. Save it again as .docx (or PDF) and try again.")
         }
         return DocxText.parse(xml)
@@ -60,7 +70,9 @@ public enum Extract {
 final class DocxText: NSObject, XMLParserDelegate {
     private var out = "", inText = false
     static func parse(_ xml: Data) -> String {
-        let d = DocxText(); let p = XMLParser(data: xml); p.delegate = d; p.parse()
+        let d = DocxText(); let p = XMLParser(data: xml); p.delegate = d
+        p.shouldResolveExternalEntities = false   // never fetch or read anything a document points at
+        p.parse()
         return d.out.replacingOccurrences(of: "\n\n\n", with: "\n\n")
     }
     func parser(_ parser: XMLParser, didStartElement e: String, namespaceURI: String?, qualifiedName q: String?, attributes: [String: String] = [:]) {

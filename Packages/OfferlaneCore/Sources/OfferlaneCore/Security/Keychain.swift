@@ -4,42 +4,85 @@ import Security
 /// Thin wrapper over generic-password Keychain items. Every secret the app holds lives here, never in files.
 public struct Keychain: Sendable {
     public let service: String
-    public init(service: String = "com.somilmanke.Offerlane") { self.service = service }
+    public let protection: Protection
+    public init(service: String = "com.somilmanke.Offerlane", protection: Protection = .login) { self.service = service; self.protection = protection }
+
+    /// Where items live. Only `.login` works today: the other two need the app signed with a Developer ID
+    /// (keychain-access-groups entitlement); without it macOS returns errSecMissingEntitlement (-34018).
+    // SHORTCUT: `.dataProtection`/`.biometric` are prepared and unit-tested by their queries only; switch the database key
+    // to them (with a one-time move from `.login`) once the Developer ID exists (HUMAN BLOCKER).
+    public enum Protection: Sendable { case login, dataProtection, biometric }
+
+    /// The query every call starts from: class, service, account and the protection's own attributes.
+    func base(_ account: String) -> [String: Any] {
+        var q: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account]
+        if protection != .login { q[kSecUseDataProtectionKeychain as String] = true }
+        return q
+    }
+    /// Attributes for a new item: device-only always; Touch ID (current enrolment) for `.biometric`.
+    func addAttributes() -> [String: Any] {
+        guard protection == .biometric,
+              let ac = SecAccessControlCreateWithFlags(nil, kSecAttrAccessibleWhenUnlockedThisDeviceOnly, .biometryCurrentSet, nil)
+        else { return [kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly] }
+        return [kSecAttrAccessControl as String: ac]
+    }
 
     public enum Account {
         public static let anthropicKey = "anthropic-api-key"
+        /// API key for a registry provider (ProviderSpec.id).
+        public static func provider(_ id: String) -> String { "provider:\(id)" }
         public static func imap(_ user: String) -> String { "imap:\(user.lowercased())" }
         public static func site(host: String, email: String) -> String { "site:\(host.lowercased())|\(email.lowercased())" }
     }
 
     public func set(_ value: String, account: String) throws {
-        let base: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account]
+        let base = base(account)
         let data = Data(value.utf8)
         var status = SecItemUpdate(base as CFDictionary, [kSecValueData as String: data] as CFDictionary)
         if status == errSecItemNotFound {
-            var add = base; add[kSecValueData as String] = data
-            add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+            var add = base.merging(addAttributes()) { $1 }; add[kSecValueData as String] = data
             status = SecItemAdd(add as CFDictionary, nil)
         }
         guard status == errSecSuccess else { throw KeychainError(status: status) }
     }
 
+    public func add(_ value: String, account: String) throws {
+        var add = base(account).merging(addAttributes()) { $1 }; add[kSecValueData as String] = Data(value.utf8)
+        let status = SecItemAdd(add as CFDictionary, nil)
+        guard status == errSecSuccess else { throw KeychainError(status: status) }
+    }
+
     public func get(account: String) -> String? {
-        let q: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account,
-                                kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne]
+        let q = base(account).merging([kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne]) { $1 }
         var out: CFTypeRef?
         guard SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess, let d = out as? Data else { return nil }
         return String(data: d, encoding: .utf8)
     }
 
     public func delete(account: String) {
-        let q: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account]
-        SecItemDelete(q as CFDictionary)
+        SecItemDelete(base(account) as CFDictionary)
+    }
+
+    /// Account names of every item in this service.
+    public func allAccounts() -> [String] {
+        var q = base("")
+        q[kSecAttrAccount as String] = nil; q[kSecReturnAttributes as String] = true; q[kSecMatchLimit as String] = kSecMatchLimitAll
+        var out: CFTypeRef?
+        guard SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess, let items = out as? [[String: Any]] else { return [] }
+        return items.compactMap { $0[kSecAttrAccount as String] as? String }
+    }
+
+    /// Copies every item from this service into `other` (used when v0.1 data moves into an account).
+    public func copyAll(to other: Keychain) throws -> Int {
+        var n = 0
+        for a in allAccounts() { if let v = get(account: a) { try other.set(v, account: a); n += 1 } }
+        return n
     }
 
     /// Removes every item this app stored (Settings → Delete all my data).
     public func deleteAll() {
-        SecItemDelete([kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service] as CFDictionary)
+        var q = base(""); q[kSecAttrAccount as String] = nil
+        SecItemDelete(q as CFDictionary)
     }
 
     /// An 18-character password with lower, upper, digit and symbol, from the system CSPRNG.

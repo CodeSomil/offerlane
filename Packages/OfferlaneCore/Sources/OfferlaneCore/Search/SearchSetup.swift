@@ -2,7 +2,9 @@ import Foundation
 
 /// The candidate brief shared by search setup, scoring and tailoring (ported from rank.candidate_brief).
 public enum Brief {
-    public static func candidate(resume r: ResumeContent, versions: [ResumeVersion], profile p: Profile, search s: SearchConfig) -> String {
+    /// `private: false` (tailoring) leaves out current pay and personal notes: tailored text goes to employers, and a
+    /// job posting could try to talk the AI into repeating them there.
+    public static func candidate(resume r: ResumeContent, versions: [ResumeVersion], profile p: Profile, search s: SearchConfig, includePrivate: Bool = true) -> String {
         let w = p.work, a = p.authorization
         let exp = r.experience.prefix(5).map { $0.title + ($0.company.isEmpty ? "" : " @ \($0.company)") }.joined(separator: "; ")
         let vtxt = versions.count > 1 ? "\nResume versions: " + versions.map { "\($0.name) = \($0.label)" }.joined(separator: "; ") : ""
@@ -11,15 +13,15 @@ public enum Brief {
         CANDIDATE: \(r.headline). \(years) yrs. Current: \(w.currentTitle) at \(w.currentCompany).
         Experience: \(exp)
         Skills: \(r.topSkills.joined(separator: ", "))
-        Targets: \(s.targetTitles.joined(separator: ", "))
+        Targets: \(s.targetTitles.joined(separator: ", "))\(s.aspirations.isEmpty ? "" : "\nAspirations (stretch): " + s.aspirations.joined(separator: ", "))
         Locations: \(s.locations.prefix(20).joined(separator: ", ")); remote ok: \(s.remoteOk). Authorized to work in: \(a.authorizedCountries.joined(separator: ", ")); needs sponsorship elsewhere: \(a.needsSponsorship).
-        Pay: current \(w.currentSalary.isEmpty ? "?" : w.currentSalary), target \(w.expectedSalary.isEmpty ? "?" : w.expectedSalary).
-        Deal-breakers / must-haves: \(p.prefs.dealbreakers.isEmpty ? "none" : p.prefs.dealbreakers). Notes: \(p.prefs.notes)\(vtxt)
+        \(includePrivate ? "Pay: current \(w.currentSalary.isEmpty ? "?" : w.currentSalary), target \(w.expectedSalary.isEmpty ? "?" : w.expectedSalary).\n" : "")\
+        Deal-breakers / must-haves: \(p.prefs.dealbreakers.isEmpty ? "none" : p.prefs.dealbreakers).\(includePrivate ? " Notes: \(p.prefs.notes)" : "")\(vtxt)
         """
     }
 }
 
-/// One AI call at onboarding drafts the search: title filters, phrases and 40–60 companies.
+/// One AI call at onboarding drafts the search: title filters, phrases and a watchlist of companies (a ranking boost, not a filter).
 public struct SearchSetup: Sendable {
     public let ai: AI
     public init(ai: AI) { self.ai = ai }
@@ -41,13 +43,18 @@ public struct SearchSetup: Sendable {
         @LenientArray var companies: [SearchConfig.Company]
     }
 
+    static func brief(_ s: SearchConfig, resume: ResumeContent, versions: [ResumeVersion], profile: Profile) -> String {
+        Brief.candidate(resume: resume, versions: versions, profile: profile, search: s)
+            + "\nTarget titles: \(s.targetTitles.joined(separator: ", "))\nLocations: \(s.locations.joined(separator: ", ")) (remote ok: \(s.remoteOk))"
+    }
+
     /// Returns `search` with the AI's draft merged in (target titles are always included).
     public func draft(_ search: SearchConfig, resume: ResumeContent, versions: [ResumeVersion], profile: Profile) async throws -> SearchConfig {
         var s = search
         if s.targetTitles.isEmpty { s.targetTitles = Array(resume.suggestedTitles.prefix(6)) }
-        let brief = Brief.candidate(resume: resume, versions: versions, profile: profile, search: s)
-            + "\nTarget titles: \(s.targetTitles.joined(separator: ", "))\nLocations: \(s.locations.joined(separator: ", ")) (remote ok: \(s.remoteOk))"
-        let d: Draft = try await ai.json(LLMRequest(prompt: Self.prompt, cache: brief, smart: true, maxTokens: 3500))
+        let brief = Self.brief(s, resume: resume, versions: versions, profile: profile)
+        let d: Draft = try await ai.cachedJSON(LLMRequest(prompt: Self.prompt, cache: brief, smart: true, maxTokens: 3500),
+                                               key: ai.cacheKey("setup-v1", [Hash.sha256(brief)], smart: true), kind: "setup")
         s.titleInclude = Array(Set((d.titleInclude + s.targetTitles).map { $0.lowercased() })).sorted()
         s.titleExclude = d.titleExclude.map { $0.lowercased() }
         s.queries = d.queries

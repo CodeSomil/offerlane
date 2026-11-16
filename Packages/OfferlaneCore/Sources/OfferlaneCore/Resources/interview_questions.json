@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "note": "Common interview questions (general hiring practice, no facts or figures). Track ids match career_paths.json. The app labels these 'common questions'; real interviews vary by company.",
+  "behavioral": [
+    "Tell me about yourself.",
+    "Why are you interested in this role?",
+    "Tell me about a project you are most proud of.",
+    "Describe a time you disagreed with a colleague. How did you resolve it?",
+    "Tell me about a time you failed. What did you learn?",
+    "Describe a time you had to deliver under a tight deadline.",
+    "Tell me about a time you influenced a decision without formal authority.",
+    "Describe a situation where you had to learn something new quickly.",
+    "Tell me about a time you received difficult feedback.",
+    "Describe a time you had to make a decision with incomplete information.",
+    "Tell me about a time you improved a process.",
+    "Where do you want to be in three years?"
+  ],
+  "tracks": {
+    "data-science": [
+      "Walk me through a model you built from problem framing to deployment.",
+      "How do you choose an evaluation metric for a new problem?",
+      "How would you design and analyse an A/B test?",
+      "How do you handle missing or imbalanced data?",
+      "Explain the bias-variance trade-off to a non-technical stakeholder.",
+      "Tell me about a time your analysis changed a business decision."
+    ],
+    "analytics": [
+      "How would you define and track a success metric for a new feature?",
+      "A key metric dropped overnight. How do you investigate?",
+      "Write or describe a SQL query to find each customer's most recent order.",
+      "How do you present findings to a non-technical audience?",
+      "How do you make sure a dashboard is trusted and used?",
+      "Tell me about an analysis that led to action."
+    ],
+    "ml-engineering": [
+      "How do you take a model from a notebook to production?",
+      "How do you monitor a model for drift after deployment?",
+      "Describe how you would design a recommendation system.",
+      "How do you reduce inference latency or cost?",
+      "How do you version data, code and models together?",
+      "Tell me about a production ML incident and how you handled it."
+    ],
+    "data-engineering": [
+      "Design a pipeline that ingests events and serves daily aggregates.",
+      "Batch or streaming: how do you choose?",
+      "How do you ensure data quality across pipelines?",
+      "How do you model data for a warehouse?",
+      "How do you handle schema changes upstream?",
+      "Tell me about a pipeline you made faster or more reliable."
+    ],
+    "software-engineering": [
+      "Design a URL shortener. What are the main trade-offs?",
+      "Walk me through how you debug a production issue.",
+      "How do you decide what to test and how?",
+      "Tell me about a technical decision you would make differently now.",
+      "How do you review someone else's code?",
+      "How do you approach paying down technical debt?"
+    ],
+    "engineering-management": [
+      "How do you support an engineer who is underperforming?",
+      "How do you balance delivery with technical debt?",
+      "How do you grow senior engineers on your team?",
+      "Tell me about a hire you made and why.",
+      "How do you handle conflicting priorities from stakeholders?",
+      "How do you measure your team's health?"
+    ],
+    "product-management": [
+      "How do you decide what to build next?",
+      "Tell me about a product you launched. How did you measure success?",
+      "How do you say no to a stakeholder?",
+      "How would you improve a product you use every day?",
+      "How do you work with engineering when scope must be cut?",
+      "Tell me about a time data contradicted your intuition."
+    ],
+    "ai-leadership": [
+      "How do you decide where AI will create real value for a business?",
+      "How do you build and structure an AI team?",
+      "How do you manage risk, safety and compliance in AI products?",
+      "Tell me about an AI initiative you led from idea to impact.",
+      "How do you explain AI trade-offs to executives?",
+      "How do you prioritise between research bets and near-term delivery?"
+    ],
+    "design": [
+      "Walk me through a project in your portfolio.",
+      "How do you handle feedback that conflicts with research findings?",
+      "How do you design for accessibility?",
+      "How do you work with engineers during implementation?",
+      "Tell me about a design decision you had to defend.",
+      "How do you measure whether a design worked?"
+    ],
+    "ux-research": [
+      "How do you choose a research method for a question?",
+      "Tell me about a study that changed a product direction.",
+      "How do you recruit the right participants?",
+      "How do you share findings so teams act on them?",
+      "How do you combine qualitative and quantitative evidence?",
+      "How do you handle a stakeholder who dismisses research?"
+    ],
+    "product-marketing": [
+      "How do you develop positioning for a new product?",
+      "Walk me through a launch you led.",
+      "How do you work with sales to enable them?",
+      "How do you gather and use competitive intelligence?",
+      "How do you measure the success of a launch?",
+      "Tell me about messaging that did not land and what you changed."
+    ],
+    "marketing": [
+      "How do you plan a campaign from goal to results?",
+      "How do you decide where to spend a limited budget?",
+      "Which metrics matter most for a growth campaign and why?",
+      "Tell me about a campaign that underperformed.",
+      "How do you test and iterate on creative?",
+      "How do you work with product and sales teams?"
+    ],
+    "program-management": [
+      "How do you run a program that spans several teams?",
+      "How do you identify and manage risks early?",
+      "Tell me about a program that went off track and how you recovered it.",
+      "How do you communicate status to executives?",
+      "How do you handle dependencies you do not control?",
+      "How do you decide when to escalate?"
+    ]
+  }
+}

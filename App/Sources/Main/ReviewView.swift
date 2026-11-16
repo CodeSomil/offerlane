@@ -17,6 +17,7 @@ final class ReviewModel {
     var editing = false
     var busy = false
     var error: String?
+    @ObservationIgnored var retry: (() -> Void)?
 
     init(jobID: String, app: AppModel) { self.jobID = jobID; self.app = app; load() }
 
@@ -35,7 +36,7 @@ final class ReviewModel {
         guard let t = tailor, let d = data else { return }
         busy = true; error = nil
         Task {
-            do { _ = try await t.rebuild(jobID, edit: d); editing = false; load() } catch { self.error = error.localizedDescription }
+            do { _ = try await t.rebuild(jobID, edit: d); editing = false; load() } catch { Log.error("rebuild: \(error)"); retry = { [weak self] in self?.rebuild() }; self.error = "The PDF couldn't be rebuilt. Try again; if it keeps failing, undo your last edit." }
             busy = false
         }
     }
@@ -51,13 +52,13 @@ final class ReviewModel {
             app.refresh(); app.reviewing = nil
             app.toast = Toast(message: "Resume approved. The Apply window will open it next.")
             app.apply.next()
-        } catch { self.error = error.localizedDescription }
+        } catch { Log.error("approve: \(error)"); retry = { [weak self] in self?.approve() }; self.error = "This resume couldn't be approved just now. Try again." }
     }
     func redo(note: String?, quick: Bool) {
         guard let app, let t = tailor else { return }
         do { try t.requeue(jobID, note: note, quick: quick); app.refresh(); app.kickTailoring(); app.reviewing = nil
              app.toast = Toast(message: quick ? "Using your resume as-is. It'll be back for review in a moment." : "Re-tailoring with your note.") }
-        catch { self.error = error.localizedDescription }
+        catch { Log.error("redo: \(error)"); retry = { [weak self] in self?.redo(note: note, quick: quick) }; self.error = "Offerlane couldn't start tailoring again. Try again." }
     }
     func decline() { app?.decline([jobID]); app?.reviewing = nil }
 
@@ -98,7 +99,7 @@ struct ReviewView: View {
             ToolbarItemGroup(placement: .primaryAction) {
                 if model.editing {
                     Button("Cancel") { model.data = model.saved; model.editing = false }
-                    Button("Rebuild PDF") { model.rebuild() }.buttonStyle(.borderedProminent).disabled(model.busy).keyboardShortcut("s")
+                    Button("Rebuild PDF") { model.rebuild() }.buttonStyle(.dsPrimary).disabled(model.busy).keyboardShortcut("s")
                 } else {
                     Button("Edit") { model.editing = true }.accessibilityIdentifier("review.edit")
                     Button("Redo with Note…") { showRedo = true }
@@ -106,7 +107,7 @@ struct ReviewView: View {
                             VStack(alignment: .leading, spacing: 10) {
                                 Text("What should change?").font(.headline)
                                 TextField("e.g. lead with forecasting, mention stakeholder work", text: $redoNote, axis: .vertical).lineLimit(2...4).frame(width: 320)
-                                HStack { Spacer(); Button("Redo") { showRedo = false; model.redo(note: redoNote, quick: false) }.buttonStyle(.borderedProminent).disabled(redoNote.isEmpty) }
+                                HStack { Spacer(); Button("Redo") { showRedo = false; model.redo(note: redoNote, quick: false) }.buttonStyle(.ds(.primary)).disabled(redoNote.isEmpty) }
                             }.padding()
                         }
                     Menu("More") {
@@ -116,41 +117,60 @@ struct ReviewView: View {
                         Button("Decline This Role…", role: .destructive) { confirmDecline = true }
                     }
                     Button { model.approve() } label: { Label("Approve & Apply", systemImage: "checkmark.seal").labelStyle(.titleAndIcon) }
-                        .buttonStyle(.borderedProminent).accessibilityIdentifier("review.approve")
+                        .buttonStyle(.dsPrimary).accessibilityIdentifier("review.approve")
                 }
             }
         }
         .confirmationDialog("Decline this role?", isPresented: $confirmDecline) {
             Button("Decline", role: .destructive) { model.decline() }
         } message: { Text("It will be hidden and won't come back in later searches.") }
-        .overlay { if model.busy { ProgressView("Rebuilding your PDF…").padding(20).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12)) } }
+        .overlay {
+            if model.busy {
+                HStack(spacing: DS.Space.s) { ProgressRing(value: nil); Text("Rebuilding your PDF…") }
+                    .padding(DS.Space.l).glassSurface(radius: DS.Radius.l, chrome: true)
+                    .dsShadow(DS.Elevation.overlay)
+            }
+        }
+        // Unsaved edits: leaving the screen asks first (Save rebuilds the PDF).
+        .onChange(of: model.editing && model.dirty, initial: true) { _, dirty in
+            app.unsaved = dirty ? UnsavedWork(message: "Your edits to this resume haven't been used yet. Save rebuilds the PDF with them.",
+                                              save: { [model] in model.rebuild() },
+                                              discard: { [model] in model.data = model.saved; model.editing = false }) : nil
+        }
+        .onDisappear { app.unsaved = nil }
     }
 
     @ViewBuilder private var content: some View {
         if let j = model.job, let d = model.data {
-            VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(j.title).font(.title2.bold())
-                    Text("\(j.company) · \(j.location)").foregroundStyle(.secondary)
-                    if !j.changesSummary.isEmpty { Text(j.changesSummary).font(.callout).padding(.top, 2) }
+            VStack(alignment: .leading, spacing: DS.Space.l) {
+                Card {
+                    VStack(alignment: .leading, spacing: DS.Space.m) {
+                        VStack(alignment: .leading, spacing: DS.Space.xs) {
+                            Text(j.title).font(DS.Font.title)
+                            Text("\(j.company) · \(j.location)").foregroundStyle(DS.Palette.textSecondary)
+                            if !j.changesSummary.isEmpty { Text(j.changesSummary).font(DS.Font.callout).padding(.top, 2) }
+                        }
+                        checks(d)
+                    }
                 }
-                checks(d)
-                if let e = model.error { StatusLine(kind: .error, text: e) }
+                if let e = model.error { ErrorRow(text: e, action: "Try Again") { let r = model.retry; model.error = nil; model.retry = nil; if let r { r() } else { model.load() } } }
                 headlineSummary(d)
                 ForEach(d.groups) { g in GroupDiff(model: model, group: g) }
                 if !d.unused.isEmpty {
-                    DisclosureGroup("Left out · \(d.unused.count) bullet\(d.unused.count == 1 ? "" : "s")") {
-                        ForEach(d.unused) { u in
-                            HStack(alignment: .top) {
-                                Text(u.text).font(.callout).foregroundStyle(.secondary)
-                                Spacer()
-                                if model.editing { Button("Add") { model.add(u) }.controlSize(.small) }
-                            }.padding(.vertical, 2)
+                    Card {
+                        DisclosureGroup("Left out · \(d.unused.count) bullet\(d.unused.count == 1 ? "" : "s")") {
+                            ForEach(d.unused) { u in
+                                HStack(alignment: .top) {
+                                    Text(u.text).font(DS.Font.callout).foregroundStyle(DS.Palette.textSecondary)
+                                    Spacer()
+                                    if model.editing { Button("Add") { model.add(u) }.buttonStyle(.ds(.secondary, .small)) }
+                                }.padding(.vertical, 2)
+                            }
                         }
                     }
                 }
-                GroupBox("Cover letter and answers") {
-                    TextEditor(text: $model.answers).font(.callout).frame(minHeight: 180).scrollContentBackground(.hidden)
+                SectionCard(title: "Cover letter and answers", symbol: "text.quote") {
+                    TextEditor(text: $model.answers).font(DS.Font.callout).frame(minHeight: 180).scrollContentBackground(.hidden)
                         .onChange(of: model.answers) { model.saveAnswers() }
                         .accessibilityLabel("Cover letter and answers")
                 }
@@ -165,28 +185,28 @@ struct ReviewView: View {
             HStack(spacing: 6) {
                 if let c = model.changes {
                     Chip(text: "\(c.pages) page\(c.pages == 1 ? "" : "s")", symbol: "doc")
-                    Chip(text: c.ats.hasPrefix("PASS") ? "ATS check passed" : "ATS check failed", symbol: "text.viewfinder", tint: c.ats.hasPrefix("PASS") ? .green : .red)
+                    Chip(text: c.ats.hasPrefix("PASS") ? "ATS check passed" : "ATS check failed", symbol: "text.viewfinder", tint: c.ats.hasPrefix("PASS") ? DS.Palette.offer : DS.Palette.danger)
                         .help(c.ats)
                 }
                 let rejected = d.warnings.filter { $0.contains("REJECTED") }.count
-                if rejected > 0 { Chip(text: "\(rejected) invented claim\(rejected == 1 ? "" : "s") blocked", symbol: "shield.lefthalf.filled", tint: .orange) }
+                if rejected > 0 { Chip(text: "\(rejected) invented claim\(rejected == 1 ? "" : "s") blocked", symbol: "shield.lefthalf.filled", tint: DS.Palette.warning) }
             }
             if let note = model.changes?.note { StatusLine(kind: .info, text: note) }
             if let missing = model.changes?.missingKeywords, !missing.isEmpty {
                 HStack(alignment: .firstTextBaseline) {
-                    Text("Not in your resume (add only if true):").font(.callout).foregroundStyle(.secondary)
+                    Text("Not in your resume (add only if true):").font(.callout).foregroundStyle(DS.Palette.textSecondary)
                     FlowLayout(spacing: 4) { ForEach(missing, id: \.self) { Chip(text: $0) } }
                 }
             }
             ForEach(d.warnings, id: \.self) { w in
                 Label(w, systemImage: w.contains("REJECTED") ? "xmark.shield" : "exclamationmark.triangle")
-                    .font(.caption).foregroundStyle(w.contains("REJECTED") ? Color.orange : Color.secondary)
+                    .font(.caption).foregroundStyle(w.contains("REJECTED") ? DS.Palette.warning : Color.secondary)
             }
         }
     }
 
     @ViewBuilder private func headlineSummary(_ d: ReviewData) -> some View {
-        GroupBox {
+        Card {
             VStack(alignment: .leading, spacing: 10) {
                 if model.editing {
                     TextField("Headline", text: Binding(get: { model.data?.headline ?? "" }, set: { model.data?.headline = $0 }), axis: .vertical)
@@ -195,7 +215,7 @@ struct ReviewView: View {
                     DiffText(original: d.headlineOriginal, text: d.headline).font(.headline)
                     if !d.summary.isEmpty || !d.summaryOriginal.isEmpty { DiffText(original: d.summaryOriginal, text: d.summary) }
                 }
-            }.textFieldStyle(.roundedBorder).padding(6).frame(maxWidth: .infinity, alignment: .leading)
+            }.textFieldStyle(.roundedBorder)
         }
     }
 }
@@ -207,8 +227,8 @@ struct DiffText: View {
         if original == text || original.isEmpty { Text(text) }
         else {
             VStack(alignment: .leading, spacing: 3) {
-                Text(original).strikethrough().foregroundStyle(.red.opacity(0.85)).accessibilityLabel("Original: \(original)")
-                Text(text).foregroundStyle(.green).accessibilityLabel("Tailored: \(text)")
+                Text(original).strikethrough().foregroundStyle(DS.Palette.danger).accessibilityLabel("Original: \(original)")
+                Text(text).foregroundStyle(DS.Palette.offer).accessibilityLabel("Tailored: \(text)")
             }
         }
     }
@@ -218,26 +238,26 @@ private struct GroupDiff: View {
     let model: ReviewModel
     let group: ReviewData.Group
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(group.title).font(.headline)
+        SectionCard(title: group.title) {
             if model.editing {
                 List {
                     ForEach(group.bullets) { b in
                         HStack(alignment: .top) {
-                            Image(systemName: "line.3.horizontal").foregroundStyle(.tertiary)
+                            Image(systemName: "line.3.horizontal").foregroundStyle(.tertiary).accessibilityHidden(true)
                             TextField("Bullet", text: binding(b.id), axis: .vertical).textFieldStyle(.plain)
-                            if b.text != b.original { Button { model.restore(group.g, b.id) } label: { Image(systemName: "arrow.uturn.backward") }.buttonStyle(.borderless).help("Restore original") }
-                            Button { model.remove(group.g, b.id) } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless).help("Leave out")
+                            if b.text != b.original { Button { model.restore(group.g, b.id) } label: { Image(systemName: "arrow.uturn.backward") }.buttonStyle(.borderless).help("Restore original").accessibilityLabel("Restore original") }
+                            Button { model.remove(group.g, b.id) } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless).help("Leave out").accessibilityLabel("Leave out this bullet")
                         }
                     }
                     .onMove { model.move(group.g, from: $0, to: $1) }
                 }
                 .frame(minHeight: CGFloat(group.bullets.count) * 52)
                 .scrollDisabled(true)
+                .scrollContentBackground(.hidden)
             } else {
                 ForEach(group.bullets) { b in
                     HStack(alignment: .top, spacing: 6) {
-                        Text("•").foregroundStyle(.secondary)
+                        Text("•").foregroundStyle(DS.Palette.textSecondary)
                         DiffText(original: b.original, text: b.text)
                         Spacer(minLength: 0)
                         if group.moved.contains(b.id) { Chip(text: "moved", symbol: "arrow.up.arrow.down") }
@@ -259,7 +279,7 @@ struct PDFPreview: NSViewRepresentable {
     let url: URL?
     let version: Int
     func makeNSView(context: Context) -> PDFView {
-        let v = PDFView(); v.autoScales = true; v.displayMode = .singlePageContinuous; v.backgroundColor = .windowBackgroundColor; return v
+        let v = PDFView(); v.autoScales = true; v.displayMode = .singlePageContinuous; v.backgroundColor = .windowBackgroundColor; v.setAccessibilityLabel("Resume preview"); return v
     }
     func updateNSView(_ v: PDFView, context: Context) {
         if context.coordinator.version != version { context.coordinator.version = version; v.document = url.flatMap { PDFDocument(url: $0) } }

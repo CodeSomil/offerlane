@@ -1,0 +1,37 @@
+{
+  "name": "@offerlane/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "worker": "tsx src/worker.ts",
+    "typecheck": "tsc -p .",
+    "test": "vitest run",
+    "migrate": "tsx src/db/migrate.ts"
+  },
+  "dependencies": {
+    "@offerlane/contract": "workspace:*",
+    "@opentelemetry/api": "^1.10.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.300.0",
+    "@opentelemetry/instrumentation-http": "^0.300.0",
+    "@opentelemetry/instrumentation-pg": "^0.77.0",
+    "@opentelemetry/sdk-node": "^0.300.0",
+    "@opentelemetry/sdk-trace": "^3.0.0",
+    "@sentry/node": "^11.10.0",
+    "fastify": "^5.12.7",
+    "jose": "^6.2.13",
+    "node-pg-migrate": "^9.0.0",
+    "pg": "^8.23.1",
+    "pg-boss": "^12.38.0",
+    "tsx": "^4.23.15",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@offerlane/core": "workspace:*",
+    "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}

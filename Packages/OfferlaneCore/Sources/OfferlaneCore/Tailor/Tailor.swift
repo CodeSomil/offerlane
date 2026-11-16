@@ -22,6 +22,14 @@ public struct Tailor: Sendable {
 
     """
 
+    /// The cached block (rules + brief + bullet bank), the condensed JD and the per-role prompt of one tailoring call.
+    static func request(_ j: Job, version v: ResumeVersion, brief: String) -> (bank: String, jd: String, prompt: String) {
+        let jd = Ranking.condense(j.description, 2600)
+        return (rules + "\n" + brief + "\n\nBULLET BANK:\n" + PlanApplier.compact(v), jd,
+                "JOB: \(j.title) at \(j.company) (\(j.location))\nJD: \(jd)\n"
+                + (j.tailorNote.isEmpty ? "" : "CANDIDATE'S NOTE: \(j.tailorNote)\n") + "Return the JSON now.")
+    }
+
     public static func folderName(_ j: Job, date: Date = Date()) -> String { "\(Dates.today(date))_\(Text.slug(j.company))_\(Text.slug(j.title))" }
 
     public struct Changes: Codable, Hashable, Sendable {
@@ -43,24 +51,54 @@ public struct Tailor: Sendable {
         let v = try version(j), profile = try store.profile(), search = try store.search(), versions = try store.resumeVersions()
         var plan = TailorPlan()
         if !j.quick {
-            let brief = Brief.candidate(resume: v.content, versions: versions, profile: profile, search: search)
-            let bank = Self.rules + "\n" + brief + "\n\nBULLET BANK:\n" + PlanApplier.compact(v)
-            let prompt = "JOB: \(j.title) at \(j.company) (\(j.location))\nJD: \(Ranking.condense(j.description, 2600))\n"
-                + (j.tailorNote.isEmpty ? "" : "CANDIDATE'S NOTE: \(j.tailorNote)\n") + "Return the JSON now."
-            plan = try await ai.json(LLMRequest(prompt: prompt, cache: bank, smart: true, maxTokens: 3500))
+            let brief = Brief.candidate(resume: v.content, versions: versions, profile: profile, search: search, includePrivate: false)
+            let (bank, jd, prompt) = Self.request(j, version: v, brief: brief)
+            // The same role posted for several cities gets one tailoring: the key leaves out the location.
+            // A redo with a note, a changed resume or a changed profile all change the key.
+            let key = ai.cacheKey("tailor-v1", [Hash.sha256(bank), j.company.lowercased(), j.title.lowercased(), jd, j.tailorNote], smart: true)
+            plan = try await ai.cachedJSON(LLMRequest(prompt: prompt, cache: bank, smart: true, maxTokens: 3500), key: key, kind: "tailor")
         }
+        try await finish(j, plan: plan, version: v, profile: profile, by: "tailor")
+    }
+
+    /// Writes the plan's files and moves the role to review. Shared by Tailor.run and outside drafts (Claude).
+    /// Files are built in a temp folder first and moved in only after the status change commits, so a failed render or a
+    /// role changed meanwhile (another tailoring finished first) leaves the old draft and status untouched.
+    /// `expect` is the status the role must still have: `.tailoring` (normal) or `.review` (a new Claude draft, kept in review).
+    func finish(_ j: Job, plan: TailorPlan, version v: ResumeVersion, profile: Profile, by source: String,
+                expect: JobStatus = .tailoring, asIs: Bool? = nil) async throws {
+        var plan = plan
         plan.variant = v.name
+        let asIs = asIs ?? j.quick
         let folder = j.folder.isEmpty ? Self.folderName(j) : j.folder
         let dir = Paths.applications.appendingPathComponent(folder, isDirectory: true)
-        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let changes = try await build(dir: dir, plan: plan, version: v, profile: profile)
-        if !j.quick || !FileManager.default.fileExists(atPath: dir.appendingPathComponent("answers.md").path) {
-            try Self.answersMarkdown(plan, company: j.company).write(to: dir.appendingPathComponent("answers.md"), atomically: true, encoding: .utf8)
+        let fm = FileManager.default
+        let tmp = Paths.applications.appendingPathComponent(".draft-\(UUID().uuidString)", isDirectory: true)
+        try fm.createDirectory(at: tmp, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: tmp) }
+        // Keep files the plan doesn't rewrite (answers.md for a quick role) by starting from a copy of the current folder.
+        if fm.fileExists(atPath: dir.path) {
+            for f in (try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)) ?? [] { try? fm.copyItem(at: f, to: tmp.appendingPathComponent(f.lastPathComponent)) }
         }
-        try "# \(j.company) - \(j.title)\n\(j.location) | \(j.url)\n\n\(j.description)".write(to: dir.appendingPathComponent("job.md"), atomically: true, encoding: .utf8)
-        try store.transition(id, to: .review, by: "tailor", detail: changes.ats) {
-            $0.folder = folder; $0.keywords = plan.keywords; $0.variant = v.name; $0.changesSummary = j.quick ? "Your resume as-is." : plan.changesSummary; $0.error = ""
+        let changes = try await build(dir: tmp, plan: plan, version: v, profile: profile)
+        if !asIs || !fm.fileExists(atPath: tmp.appendingPathComponent("answers.md").path) {
+            try Self.answersMarkdown(plan, company: j.company).write(to: tmp.appendingPathComponent("answers.md"), atomically: true, encoding: .utf8)
         }
+        try "# \(j.company) - \(j.title)\n\(j.location) | \(j.url)\n\n\(j.description)".write(to: tmp.appendingPathComponent("job.md"), atomically: true, encoding: .utf8)
+        let set = { (x: inout Job) in
+            x.folder = folder; x.keywords = plan.keywords; x.variant = v.name; x.changesSummary = asIs ? "Your resume as-is." : plan.changesSummary; x.error = ""
+            if !asIs { x.quick = false }
+        }
+        if expect == .review {
+            try store.update(j.id) { x in guard x.status == .review else { throw StoreError.changed }; set(&x) }
+            try store.addEvent(j.id, status: JobStatus.review.rawValue, source: source, detail: "new draft: " + changes.ats)
+        } else {
+            do { try store.transition(j.id, to: .review, by: source, detail: changes.ats) { set(&$0) } }
+            catch is IllegalTransition { throw StoreError.changed }
+        }
+        // Committed: swap the new files in (same volume, so these are renames).
+        try? fm.removeItem(at: dir)
+        try fm.moveItem(at: tmp, to: dir)
     }
 
     /// Apply the plan, render within the page budget, check the PDF, and write plan.json / changes.json / the PDF.
@@ -125,12 +163,16 @@ public struct Tailor: Sendable {
 public actor TailorQueue {
     let store: Store
     var ai: AI?
+    var tokenLimit: Int?
     private var running = false
     private var onChange: (@Sendable (String?) -> Void)?
 
     public init(store: Store) { self.store = store }
 
-    public func configure(ai: AI?, onChange: @escaping @Sendable (String?) -> Void) { self.ai = ai; self.onChange = onChange }
+    /// `tokenLimit`: most AI tokens one tailored resume may use (nil or 0 = no limit).
+    public func configure(ai: AI?, tokenLimit: Int? = nil, onChange: @escaping @Sendable (String?) -> Void) {
+        self.ai = ai; self.tokenLimit = (tokenLimit ?? 0) > 0 ? tokenLimit : nil; self.onChange = onChange
+    }
 
     /// Process everything waiting. Returns how many roles reached review.
     @discardableResult
@@ -142,10 +184,11 @@ public actor TailorQueue {
             let todo = ((try? store.jobs([.tailoring])) ?? []).filter { $0.error.isEmpty }.sorted { $0.updated < $1.updated }
             guard let j = todo.first else { break }
             onChange?("Tailoring your resume for \(j.company) – \(j.title)…")
-            do { try await Tailor(store: store, ai: ai).run(j.id); made += 1 }
+            do { try await Tailor(store: store, ai: ai.scoped(budget: tokenLimit)).run(j.id); made += 1 }
             catch {
                 Log.error("tailor \(j.id): \(error.localizedDescription)")
-                _ = try? store.update(j.id) { $0.error = String(error.localizedDescription.prefix(300)) }
+                // Only a role still waiting gets the error: if a Claude draft reached review meanwhile, it stays clean.
+                _ = try? store.update(j.id) { if $0.status == .tailoring { $0.error = String(error.localizedDescription.prefix(300)) } }
             }
             onChange?(nil)
         }

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Google sign-in settings: the ONLY place the OAuth client ID lives. See docs/GOOGLE_SETUP.md.
+  GoogleClientID:     the "Desktop app" client ID from Google Cloud Console (placeholder below = Google sign-in hidden behind a notice).
+  GoogleClientSecret: the Desktop client's secret. Google treats it as NOT confidential for installed apps; PKCE protects the flow.
+  GmailTestingMode:   true only while the Google project is in Testing mode with you listed as a test user.
+                      Turns on "Connect Gmail" (read-only). IMAP stays the default either way.
+-->
+<plist version="1.0">
+<dict>
+	<key>GoogleClientID</key>
+	<string>REPLACE_WITH_YOUR_DESKTOP_CLIENT_ID.apps.googleusercontent.com</string>
+	<key>GoogleClientSecret</key>
+	<string></string>
+	<key>GmailTestingMode</key>
+	<false/>
+</dict>
+</plist>

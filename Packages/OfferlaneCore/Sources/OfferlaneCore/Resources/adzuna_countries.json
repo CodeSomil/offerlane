@@ -1,0 +1,21 @@
+[
+  {"code": "at", "site": "adzuna.at"},
+  {"code": "au", "site": "adzuna.com.au"},
+  {"code": "be", "site": "adzuna.be"},
+  {"code": "br", "site": "adzuna.com.br"},
+  {"code": "ca", "site": "adzuna.ca"},
+  {"code": "ch", "site": "adzuna.ch"},
+  {"code": "de", "site": "adzuna.de"},
+  {"code": "es", "site": "adzuna.es"},
+  {"code": "fr", "site": "adzuna.fr"},
+  {"code": "gb", "site": "adzuna.co.uk"},
+  {"code": "in", "site": "adzuna.in"},
+  {"code": "it", "site": "adzuna.it"},
+  {"code": "mx", "site": "adzuna.com.mx"},
+  {"code": "nl", "site": "adzuna.nl"},
+  {"code": "nz", "site": "adzuna.co.nz"},
+  {"code": "pl", "site": "adzuna.pl"},
+  {"code": "sg", "site": "adzuna.sg"},
+  {"code": "us", "site": "adzuna.com"},
+  {"code": "za", "site": "adzuna.co.za"}
+]

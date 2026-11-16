@@ -24,9 +24,13 @@
 	<string>public.app-category.productivity</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2026 Somil Manke</string>
+	<key>OfferlaneRegistryURL</key>
+	<string>https://example.invalid/offerlane/providers.json</string>
 	<key>SUEnableAutomaticChecks</key>
 	<false/>
 	<key>SUFeedURL</key>
 	<string>https://example.invalid/offerlane/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>$(SPARKLE_PUBLIC_KEY)</string>
 </dict>
 </plist>

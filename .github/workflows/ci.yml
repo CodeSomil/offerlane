@@ -1,14 +1,102 @@
+# CI for every push and pull request: contrast check, secret scan, OfferlaneCore build (warnings fail) + tests,
+# then a Release build of the app through the privacy gate. UI tests and the apply self-test need macOS automation
+# mode and run only locally with scripts/test.sh (see docs/DEVELOPING.md).
 name: CI
 on:
-  push: { branches: [main] }
+  push:
   pull_request:
 permissions:
   contents: read
 jobs:
-  core-tests:
-    runs-on: macos-15
+  test:
+    runs-on: macos-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - name: Core tests
-        working-directory: Packages/OfferlaneCore
-        run: swift test
+        with:
+          fetch-depth: 0   # the secret scan reads the full history
+      - name: Toolchain
+        run: xcodebuild -version && swift --version
+      - name: Cache SwiftPM
+        uses: actions/cache@v4
+        with:
+          path: |
+            Packages/OfferlaneCore/.build/checkouts
+            Packages/OfferlaneCore/.build/repositories
+            ~/Library/Caches/org.swift.swiftpm
+            build/DerivedData/SourcePackages
+          key: spm-${{ runner.os }}-${{ hashFiles('Packages/OfferlaneCore/Package.resolved', 'project.yml') }}
+          restore-keys: spm-${{ runner.os }}-
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Contrast, secret scan, OfferlaneCore tests (+ libs/core parity)
+        run: scripts/test.sh core
+      - name: Release build + privacy gate
+        run: |
+          brew install xcodegen
+          scripts/build.sh Release
+          scripts/privacy_gate.sh build/DerivedData/Build/Products/Release/Offerlane.app
+  cloud:
+    # Linux: GitHub's macOS runners have no Docker, and the database tests need Postgres + pgvector.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      db:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: offerlane
+        ports: ["54329:5432"]
+        options: --health-cmd "pg_isready -U postgres" --health-interval 2s --health-retries 30
+    env:
+      OFFERLANE_TEST_DATABASE_URL: postgres://postgres@127.0.0.1:54329/offerlane
+      OFFERLANE_REQUIRE_DB: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Cloud workspace (typecheck + tests)
+        run: scripts/test.sh cloud
+      - name: Web + extension end to end (Playwright + axe)
+        run: (cd apps/web && npx playwright install --with-deps chromium) && scripts/test.sh web
+      - name: Production images + preview stack (short load test, full H4 run is local)
+        run: DURATION=15 scripts/load_test.sh
+  spike-windows:
+    # v4 P4.2: the Tauri shell on real WebView2. The GO/NO-GO reads this job's log: 14/14 apply checks plus the Credential
+    # Manager round-trip (`offerlane.exe --selftest`). The windows-latest image ships the WebView2 runtime.
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Rust (the version pinned in rust-toolchain.toml)
+        working-directory: apps/windows/src-tauri
+        run: rustup toolchain install && rustc --version
+      - name: Web side (typecheck, tests, build)
+        run: |
+          npx -y pnpm@11.28.9 install --frozen-lockfile --filter "@offerlane/windows..."
+          npx -y pnpm@11.28.9 -s --filter @offerlane/windows typecheck
+          npx -y pnpm@11.28.9 -s --filter @offerlane/windows test
+          npx -y pnpm@11.28.9 -s --filter @offerlane/windows build
+      - name: Rust tests (incl. the Credential Manager round-trip)
+        working-directory: apps/windows/src-tauri
+        run: cargo test --locked
+      - name: Build the app and its installer (release, devtools off, as shipped; unsigned until a certificate exists)
+        working-directory: apps/windows
+        run: npx -y pnpm@11.28.9 -s tauri build --bundles nsis -- --locked
+      - name: Apply self-test on WebView2 (the same release exe the installer ships)
+        working-directory: apps/windows/src-tauri
+        run: timeout 900 ./target/release/offerlane.exe --selftest
+      - name: Upload the unsigned installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: offerlane-windows-unsigned
+          path: apps/windows/src-tauri/target/release/bundle/nsis/*-setup.exe
+          if-no-files-found: error

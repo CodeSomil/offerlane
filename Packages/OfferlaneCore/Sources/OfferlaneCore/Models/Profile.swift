@@ -109,6 +109,12 @@ public struct SearchConfig: Codable, Hashable, Sendable {
     @LenientBool<DefaultTrue> public var remoteOk: Bool
     @LenientArray public var companies: [Company]
     @LenientArray public var queries: [String]
+    /// Roles the user is reaching for (above or beside their current one); searched too, and scored as stretch.
+    @LenientArray public var aspirations: [String]
+    /// Job source on/off switches by source id; a missing id uses that source's default.
+    public var sources: [String: Bool] = [:]
+    /// Adzuna country code ("gb", "us"…); empty means from the Mac's region (`Adzuna.country`).
+    public var adzunaCountry: String = ""
     public var minScore: Int = 60
     public var maxAgeDays: Int = 21
     public var poolSize: Int = 25
@@ -128,7 +134,7 @@ public struct SearchConfig: Codable, Hashable, Sendable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case targetTitles, titleInclude, titleExclude, boostKeywords, penaltyKeywords, excludeCompanies, locations, remoteOk, companies, queries
+        case targetTitles, titleInclude, titleExclude, boostKeywords, penaltyKeywords, excludeCompanies, locations, remoteOk, companies, queries, aspirations, sources, adzunaCountry
         case minScore, maxAgeDays, poolSize
     }
     public init(from decoder: Decoder) throws {
@@ -143,6 +149,9 @@ public struct SearchConfig: Codable, Hashable, Sendable {
         _remoteOk = try c.decode(LenientBool<DefaultTrue>.self, forKey: .remoteOk)
         _companies = try c.decode(LenientArray<Company>.self, forKey: .companies)
         _queries = try c.decode(LenientArray<String>.self, forKey: .queries)
+        _aspirations = try c.decode(LenientArray<String>.self, forKey: .aspirations)
+        sources = (try? c.decodeIfPresent([String: Bool].self, forKey: .sources)) ?? [:]
+        adzunaCountry = (try? c.decodeIfPresent(String.self, forKey: .adzunaCountry)) ?? ""
         minScore = (try? c.decodeIfPresent(Int.self, forKey: .minScore)) ?? 60
         maxAgeDays = (try? c.decodeIfPresent(Int.self, forKey: .maxAgeDays)) ?? 21
         poolSize = (try? c.decodeIfPresent(Int.self, forKey: .poolSize)) ?? 25
@@ -151,8 +160,10 @@ public struct SearchConfig: Codable, Hashable, Sendable {
 
 /// App settings that are not secrets (secrets live only in Keychain).
 public struct AppSettings: Codable, Hashable, Sendable {
-    public enum Provider: String, Codable, CaseIterable, Sendable { case claudeCLI = "claude_cli", anthropic, ollama, none }
+    public enum Provider: String, Codable, CaseIterable, Sendable { case claudeCLI = "claude_cli", anthropic, ollama, apiKey = "api_key", none }
     public var provider: Provider = .none
+    /// The registry id (providers.json) when `provider` is `.apiKey`; its key is `Keychain.Account.provider(id)`.
+    public var providerID: String = ""
     public var claudePath: String = ""
     /// Claude CLI aliases ("haiku"/"sonnet"), Anthropic model IDs, or Ollama model names.
     public var modelFast: String = ""
@@ -161,12 +172,37 @@ public struct AppSettings: Codable, Hashable, Sendable {
     public var onboarded = false
     public var email = Email()
     public var notify = Notify()
+    /// Most AI tokens one Find Jobs run may use (0 = no limit). A full run of 25 postings needs about 5,000–10,000.
+    public var runTokenLimit = 50_000
+    /// Most AI tokens one tailored resume may use (0 = no limit). One tailoring needs about 3,000–8,000.
+    public var tailorTokenLimit = 25_000
+    /// Other connected AIs, tried in order when the primary hits a rate limit or is down (ResilientClient).
+    public var fallbacks: [Connection] = []
 
-    enum CodingKeys: String, CodingKey { case provider, claudePath, modelFast, modelSmart, baseUrl, onboarded, email, notify }
+    /// One connected AI: the primary's fields, without the app-wide ones.
+    public struct Connection: Codable, Hashable, Sendable {
+        public var provider: Provider
+        public var providerID = ""
+        public var modelFast = ""
+        public var modelSmart = ""
+        public var baseUrl = ""
+        public init(provider: Provider, providerID: String = "", modelFast: String = "", modelSmart: String = "", baseUrl: String = "") {
+            self.provider = provider; self.providerID = providerID; self.modelFast = modelFast; self.modelSmart = modelSmart; self.baseUrl = baseUrl
+        }
+    }
+
+    /// The primary AI as a Connection.
+    public var connection: Connection {
+        get { Connection(provider: provider, providerID: providerID, modelFast: modelFast, modelSmart: modelSmart, baseUrl: baseUrl) }
+        set { provider = newValue.provider; providerID = newValue.providerID; modelFast = newValue.modelFast; modelSmart = newValue.modelSmart; baseUrl = newValue.baseUrl }
+    }
+
+    enum CodingKeys: String, CodingKey { case provider, providerID, claudePath, modelFast, modelSmart, baseUrl, onboarded, email, notify, runTokenLimit, tailorTokenLimit, fallbacks }
     /// Tolerant: any field missing from an older settings document keeps its default.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self); let d = AppSettings()
         provider = (try? c.decodeIfPresent(Provider.self, forKey: .provider)) ?? d.provider
+        providerID = (try? c.decodeIfPresent(String.self, forKey: .providerID)) ?? d.providerID
         claudePath = (try? c.decodeIfPresent(String.self, forKey: .claudePath)) ?? d.claudePath
         modelFast = (try? c.decodeIfPresent(String.self, forKey: .modelFast)) ?? d.modelFast
         modelSmart = (try? c.decodeIfPresent(String.self, forKey: .modelSmart)) ?? d.modelSmart
@@ -174,6 +210,9 @@ public struct AppSettings: Codable, Hashable, Sendable {
         onboarded = (try? c.decodeIfPresent(Bool.self, forKey: .onboarded)) ?? d.onboarded
         email = (try? c.decodeIfPresent(Email.self, forKey: .email)) ?? d.email
         notify = (try? c.decodeIfPresent(Notify.self, forKey: .notify)) ?? d.notify
+        runTokenLimit = (try? c.decodeIfPresent(Int.self, forKey: .runTokenLimit)) ?? d.runTokenLimit
+        tailorTokenLimit = (try? c.decodeIfPresent(Int.self, forKey: .tailorTokenLimit)) ?? d.tailorTokenLimit
+        fallbacks = (try? c.decodeIfPresent([Connection].self, forKey: .fallbacks)) ?? d.fallbacks
     }
 
     public struct Email: Codable, Hashable, Sendable {
@@ -182,8 +221,10 @@ public struct AppSettings: Codable, Hashable, Sendable {
         public var host = "imap.gmail.com"
         public var port = 993
         public var user = ""
+        /// Read the inbox through the Gmail API instead of IMAP (Testing-mode preview; IMAP is the default).
+        public var gmail = false
         public init() {}
-        enum CodingKeys: String, CodingKey { case enabled, preset, host, port, user }
+        enum CodingKeys: String, CodingKey { case enabled, preset, host, port, user, gmail }
         public init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self); let d = Email()
             enabled = (try? c.decodeIfPresent(Bool.self, forKey: .enabled)) ?? d.enabled
@@ -191,6 +232,7 @@ public struct AppSettings: Codable, Hashable, Sendable {
             host = (try? c.decodeIfPresent(String.self, forKey: .host)) ?? d.host
             port = (try? c.decodeIfPresent(Int.self, forKey: .port)) ?? d.port
             user = (try? c.decodeIfPresent(String.self, forKey: .user)) ?? d.user
+            gmail = (try? c.decodeIfPresent(Bool.self, forKey: .gmail)) ?? d.gmail
         }
     }
     public struct Notify: Codable, Hashable, Sendable {

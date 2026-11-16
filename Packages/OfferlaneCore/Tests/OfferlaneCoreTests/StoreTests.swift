@@ -1,3 +1,4 @@
+import GRDB
 import XCTest
 @testable import OfferlaneCore
 
@@ -93,5 +94,78 @@ final class ProfilePrefillTests: XCTestCase {
         XCTAssertEqual(p.personal.phone, "+44 1", "typed values are kept")
         XCTAssertEqual(Set(p.validationErrors.keys), ["phone"])
         p.personal.email = "nope"; XCTAssertNotNil(p.validationErrors["email"])
+    }
+}
+
+/// v0.2 adds the AI answer cache with an additive migration; a v0.1 database must open with its data intact.
+final class CacheMigrationTests: XCTestCase {
+    func testV01DatabaseUpgradesAndKeepsData() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("v01-\(UUID().uuidString).sqlite")
+        defer { try? FileManager.default.removeItem(at: url) }
+        // Build exactly what v0.1 shipped: only the "v1" migration.
+        do {
+            let q = try DatabaseQueue(path: url.path)
+            try Store.migrator.migrate(q, upTo: "v1")
+            try q.write { db in
+                try db.execute(sql: "INSERT INTO usage(day, calls, input_tokens, output_tokens, cached_tokens, usd) VALUES ('2026-10-01', 3, 900, 300, 0, 0.01)")
+                XCTAssertFalse(try db.tableExists("llm_cache"))
+            }
+            // Raw SQL: today's Job model has columns v0.1 didn't (e.g. tier).
+            let id = Job(company: "Globex", title: "Data Scientist", location: "London").id
+            try q.write { try $0.execute(sql: "INSERT INTO job(id, company, title, location, status, llm_score) VALUES (?, 'Globex', 'Data Scientist', 'London', 'found', 77)", arguments: [id]) }
+        }
+        let store = try Store(url: url)
+        XCTAssertEqual(try store.jobs().first?.llmScore, 77, "v0.1 roles survive the upgrade")
+        XCTAssertEqual(try store.usage().first?.calls, 3, "v0.1 usage survives the upgrade")
+        XCTAssertEqual(try store.cacheCount(), 0)
+        try store.cache("k", kind: "rank", value: Data("{}".utf8))
+        XCTAssertEqual(try store.cached("k"), Data("{}".utf8))
+        XCTAssertEqual(try store.pruneCache(olderThanDays: 120), 0, "recent answers are kept")
+        XCTAssertEqual(try store.pruneCache(olderThanDays: -1), 1, "old entries can be pruned")
+        let reopened = try Store(url: url)   // opening again is a no-op
+        XCTAssertEqual(try reopened.jobs().count, 1)
+    }
+}
+
+final class StoreRecoveryTests: XCTestCase {
+    func testCorruptDocumentIsSetAsideNotLost() throws {
+        let s = try Store()
+        let junk = Data("{not json".utf8)
+        try s.db.write { try $0.execute(sql: "INSERT INTO kv(key, value) VALUES ('settings', ?)", arguments: [junk]) }
+        XCTAssertEqual(try s.settings().onboarded, AppSettings().onboarded, "falls back to defaults")
+        let backups = try s.corruptBackups()
+        XCTAssertEqual(backups, ["settings.corrupt-\(Dates.today())"])
+        XCTAssertEqual(try s.db.read { try Data.fetchOne($0, sql: "SELECT value FROM kv WHERE key = ?", arguments: [backups[0]]) }, junk, "original bytes kept")
+        var fresh = AppSettings(); fresh.onboarded = true
+        try s.set(.settings, fresh)
+        XCTAssertEqual(try s.settings().onboarded, true)
+        XCTAssertEqual(try s.corruptBackups().count, 1, "saving again doesn't touch the copy")
+    }
+}
+
+final class StoreUpgradeTests: XCTestCase {
+    /// A database left by the first release (v1 schema only) opens in this build with every row and document intact.
+    func testOldestSchemaUpgradesWithoutLosingData() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("upgrade-\(UUID().uuidString)/offerlane.sqlite")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        do {
+            let old = try DatabaseQueue(path: url.path)
+            try Store.migrator.migrate(old, upTo: "v1")
+            var p = Profile(); p.personal.fullName = "Ada Lovelace"
+            let profile = try JSONCoding.encoder.encode(p)
+            try old.write { db in
+                try db.execute(sql: "INSERT INTO job(id, company, title, status) VALUES ('j1', 'Stripe', 'Head of AI', 'applied')")
+                try db.execute(sql: "INSERT INTO kv(key, value) VALUES ('profile', ?)", arguments: [profile])
+                try db.execute(sql: "INSERT INTO event(job_id, ts, status, source, detail) VALUES ('j1', '2026-01-01T00:00:00', 'applied', 'you', '')")
+            }
+        }
+        let s = try Store(url: url)
+        let job = try XCTUnwrap(s.job("j1"))
+        XCTAssertEqual(job.company, "Stripe"); XCTAssertEqual(job.status, .applied); XCTAssertEqual(job.tier, "")
+        XCTAssertEqual(try s.profile().personal.fullName, "Ada Lovelace")
+        XCTAssertEqual(try s.events(for: "j1").count, 1)
+        XCTAssertEqual(try s.cacheCount(), 0, "new tables exist after the upgrade")
+        XCTAssertTrue(try s.corruptBackups().isEmpty)
     }
 }

@@ -15,12 +15,23 @@ public enum LaTeX {
     }
 
     /// Readable text → LaTeX (for rewritten bullets). `**bold**` becomes \textbf{}.
+    /// This text comes from the AI, which reads job postings, so it is treated as hostile: every character TeX could
+    /// read as a command is neutralised. Backslashes are dropped; braces and `^` are escaped, so neither `\input{…}` nor
+    /// TeX's `^^5c` (another way to write a backslash) can reach the compiler as a command.
     public static func esc(_ input: String) -> String {
-        var s = input.replacingOccurrences(of: "\\", with: "")
-        for (a, b) in [("&", "\\&"), ("%", "\\%"), ("$", "\\$"), ("#", "\\#"), ("_", "\\_"), ("~", "\\textasciitilde{}"), ("·", "\\textperiodcentered{}"), ("–", "--")] {
-            s = s.replacingOccurrences(of: a, with: b)
+        var out = ""
+        for ch in input {
+            switch ch {
+            case "\\": continue
+            case "&", "%", "$", "#", "_", "{", "}": out += "\\" + String(ch)
+            case "^": out += "\\textasciicircum{}"
+            case "~": out += "\\textasciitilde{}"
+            case "·": out += "\\textperiodcentered{}"
+            case "–": out += "--"
+            default: if ch.isASCII && (ch.asciiValue ?? 32) < 32 && ch != "\t" { out += " " } else { out.append(ch) }
+            }
         }
-        return Re.sub("\\*\\*(.+?)\\*\\*", "\\\\textbf{$1}", s)
+        return Re.sub("\\*\\*(.+?)\\*\\*", "\\\\textbf{$1}", out)
     }
 
     static let head = "\\\\textbf\\{([^}]*)\\}|\\\\(?:sub)*section\\*?\\{([^}]*)\\}"

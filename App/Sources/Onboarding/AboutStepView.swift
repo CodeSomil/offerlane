@@ -42,7 +42,7 @@ struct AboutStepView: View {
                                prompt: "e.g. India, UK") { raw in
                         let c = Visa.canon(raw); return c.split(separator: " ").map { $0.prefix(1).uppercased() + $0.dropFirst() }.joined(separator: " ")
                     }
-                    if let err = e["countries"] { Text(err).font(.caption).foregroundStyle(.red) }
+                    if let err = e["countries"] { Text(err).font(.caption).foregroundStyle(DS.Palette.danger) }
                     Toggle("I need visa sponsorship to work anywhere else", isOn: $model.profile.authorization.needsSponsorship)
                     Grid(alignment: .leading, horizontalSpacing: 12) { FieldRow(label: "Citizenship", text: $model.profile.authorization.citizenship) }
                 }.padding(8)
@@ -73,7 +73,7 @@ struct AboutStepView: View {
                     FieldRow(label: "Disability", text: $model.profile.eeo.disability)
                     FieldRow(label: "Sexual orientation", text: $model.profile.eeo.sexualOrientation)
                 }.padding(.top, 8)
-                Text("Every answer defaults to “Decline to self-identify”.").font(.caption).foregroundStyle(.secondary)
+                Text("Every answer defaults to “Decline to self-identify”.").font(.caption).foregroundStyle(DS.Palette.textSecondary)
             }
         }
     }

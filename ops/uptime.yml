@@ -1,0 +1,28 @@
+# Uptime checks for the cloud API (P2.9). Vendor-neutral; NOT deployed: needs the H3 hosting + monitoring account.
+# Map each check onto the chosen tool (Better Stack, UptimeRobot, Grafana Synthetic, a Postman Monitor, ...).
+# Both probes are unauthenticated and never touch user data. RUNBOOK.md ("Outage") says what to do when one fires.
+base_url: https://api.offerlane.example   # placeholder until the domain exists (H3)
+checks:
+  - name: api-live
+    url: ${base_url}/healthz          # the process answers; restart or replace the instance if this fails
+    interval: 60s
+    timeout: 5s
+    regions: 2                        # at least two, so one network blip isn't an outage
+    expect: { status: 200, body_json: { ok: true } }
+    alert_after: 3 consecutive failures
+  - name: api-ready
+    url: ${base_url}/readyz           # the DB answers within 2 s and the newest migration is applied
+    interval: 60s
+    timeout: 5s
+    regions: 2
+    expect: { status: 200, body_json: { ok: true } }   # 503 {"error":"not_ready"} = DB down or a deploy skipped `migrate up`
+    alert_after: 3 consecutive failures
+  - name: api-tls
+    url: ${base_url}/healthz
+    interval: 24h
+    expect: { tls_valid_for_days: ">= 14" }
+    alert_after: 1 failure
+alerts:
+  to: on-call (human: pick the channel, H3)
+  also_open: an incident per RUNBOOK.md
+# The load balancer / container platform uses the same probes: liveness = /healthz, readiness = /readyz (compose.preview.yml does).

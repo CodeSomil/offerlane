@@ -19,7 +19,21 @@ public enum Text {
 
     /// Strip tags after unescaping entities twice (ATS APIs often double-escape their HTML).
     public static func stripHTML(_ s: String?) -> String {
-        collapse(Re.sub("<[^>]+>", " ", unescapeHTML(unescapeHTML(s ?? ""))))
+        collapse(stripTags(unescapeHTML(unescapeHTML(s ?? ""))))
+    }
+
+    /// Same output as replacing `<[^>]+>` with " ", in linear time (that regex is quadratic on "<<<<…" with no ">").
+    /// apps/api/src/ats.ts has the same scan.
+    static func stripTags(_ s: String) -> String {
+        let u = Array(s.unicodeScalars)
+        var out = String.UnicodeScalarView(), i = 0
+        while i < u.count {
+            if u[i] != "<" { out.append(u[i]); i += 1; continue }
+            guard let j = u[(i + 1)...].firstIndex(of: ">") else { out.append(contentsOf: u[i...]); break }  // no ">" later: nothing after can match
+            if j == i + 1 { out.append(u[i]); i += 1; continue }  // "<>" isn't a tag
+            out.append(" "); i = j + 1
+        }
+        return String(out)
     }
 
     public static func unescapeHTML(_ s: String) -> String {
@@ -78,7 +92,8 @@ public enum Dates {
         return Calendar(identifier: .gregorian).dateComponents([.day], from: d, to: isoDay.date(from: today(now))!).day ?? 0
     }
     public static func daysAgo(_ n: Int, now: Date = Date()) -> String {
-        today(Calendar(identifier: .gregorian).date(byAdding: .day, value: -n, to: now)!)
+        var c = Calendar(identifier: .gregorian); c.timeZone = isoDay.timeZone  // same zone as the formatter, or a DST change shifts the day
+        return today(c.date(byAdding: .day, value: -n, to: now)!)
     }
     /// Epoch seconds or milliseconds, or any string starting with an ISO date.
     public static func toDate(_ v: Any?) -> String? {
@@ -88,5 +103,19 @@ public enum Dates {
         case let s as String where !s.isEmpty: return String(s.prefix(10))
         default: return nil
         }
+    }
+}
+
+import CryptoKit
+public enum Hash {
+    public static func sha256(_ s: String) -> String { SHA256.hash(data: Data(s.utf8)).map { String(format: "%02x", $0) }.joined() }
+}
+
+public extension URL {
+    /// A link from outside data (career-site APIs, emails, AI output), accepted only if it is an http(s) web address.
+    static func web(_ s: String) -> URL? {
+        guard let u = URL(string: s.trimmingCharacters(in: .whitespacesAndNewlines)), let scheme = u.scheme?.lowercased(),
+              scheme == "https" || scheme == "http", u.host != nil else { return nil }
+        return u
     }
 }

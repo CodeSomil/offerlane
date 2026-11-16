@@ -1,0 +1,212 @@
+{
+  "version": 1,
+  "note": "Typical career ladders (general industry practice, no figures). Each ladder runs junior to senior; pivots name adjacent tracks. Titles vary by company: the app labels these 'typical' and scores every step against the user's own collected postings.",
+  "tracks": [
+    {
+      "id": "data-science",
+      "name": "Data science",
+      "ladder": [
+        "Data Scientist",
+        "Senior Data Scientist",
+        "Staff Data Scientist",
+        "Principal Data Scientist",
+        "Head of Data Science"
+      ],
+      "pivots": [
+        "ml-engineering",
+        "analytics",
+        "ai-leadership",
+        "product-management"
+      ]
+    },
+    {
+      "id": "analytics",
+      "name": "Analytics",
+      "ladder": [
+        "Data Analyst",
+        "Senior Data Analyst",
+        "Lead Data Analyst",
+        "Analytics Manager",
+        "Head of Analytics"
+      ],
+      "pivots": [
+        "data-science",
+        "data-engineering",
+        "product-management"
+      ]
+    },
+    {
+      "id": "ml-engineering",
+      "name": "Machine learning engineering",
+      "ladder": [
+        "Machine Learning Engineer",
+        "Senior Machine Learning Engineer",
+        "Staff Machine Learning Engineer",
+        "Machine Learning Engineering Manager",
+        "Head of Machine Learning"
+      ],
+      "pivots": [
+        "data-science",
+        "software-engineering",
+        "ai-leadership"
+      ]
+    },
+    {
+      "id": "data-engineering",
+      "name": "Data engineering",
+      "ladder": [
+        "Data Engineer",
+        "Senior Data Engineer",
+        "Staff Data Engineer",
+        "Data Engineering Manager",
+        "Head of Data Engineering"
+      ],
+      "pivots": [
+        "ml-engineering",
+        "software-engineering",
+        "analytics"
+      ]
+    },
+    {
+      "id": "software-engineering",
+      "name": "Software engineering",
+      "ladder": [
+        "Software Engineer",
+        "Senior Software Engineer",
+        "Staff Software Engineer",
+        "Principal Software Engineer",
+        "Distinguished Engineer"
+      ],
+      "pivots": [
+        "engineering-management",
+        "ml-engineering",
+        "product-management"
+      ]
+    },
+    {
+      "id": "engineering-management",
+      "name": "Engineering management",
+      "ladder": [
+        "Engineering Manager",
+        "Senior Engineering Manager",
+        "Director of Engineering",
+        "VP of Engineering",
+        "CTO"
+      ],
+      "pivots": [
+        "software-engineering",
+        "product-management",
+        "program-management"
+      ]
+    },
+    {
+      "id": "product-management",
+      "name": "Product management",
+      "ladder": [
+        "Product Manager",
+        "Senior Product Manager",
+        "Group Product Manager",
+        "Director of Product",
+        "VP of Product"
+      ],
+      "pivots": [
+        "ai-leadership",
+        "engineering-management",
+        "product-marketing",
+        "design"
+      ]
+    },
+    {
+      "id": "ai-leadership",
+      "name": "AI product and leadership",
+      "ladder": [
+        "AI Product Manager",
+        "Senior AI Product Manager",
+        "Head of AI",
+        "Director of AI",
+        "VP of AI"
+      ],
+      "pivots": [
+        "product-management",
+        "data-science",
+        "ml-engineering"
+      ]
+    },
+    {
+      "id": "design",
+      "name": "Product design",
+      "ladder": [
+        "Product Designer",
+        "Senior Product Designer",
+        "Lead Product Designer",
+        "Design Manager",
+        "Head of Design"
+      ],
+      "pivots": [
+        "ux-research",
+        "product-management"
+      ]
+    },
+    {
+      "id": "ux-research",
+      "name": "UX research",
+      "ladder": [
+        "UX Researcher",
+        "Senior UX Researcher",
+        "Lead UX Researcher",
+        "UX Research Manager",
+        "Head of Research"
+      ],
+      "pivots": [
+        "design",
+        "product-management",
+        "analytics"
+      ]
+    },
+    {
+      "id": "product-marketing",
+      "name": "Product marketing",
+      "ladder": [
+        "Product Marketing Manager",
+        "Senior Product Marketing Manager",
+        "Lead Product Marketing Manager",
+        "Director of Product Marketing",
+        "VP of Marketing"
+      ],
+      "pivots": [
+        "product-management",
+        "marketing"
+      ]
+    },
+    {
+      "id": "marketing",
+      "name": "Marketing",
+      "ladder": [
+        "Marketing Manager",
+        "Senior Marketing Manager",
+        "Marketing Lead",
+        "Head of Marketing",
+        "VP of Marketing"
+      ],
+      "pivots": [
+        "product-marketing",
+        "program-management"
+      ]
+    },
+    {
+      "id": "program-management",
+      "name": "Program management",
+      "ladder": [
+        "Project Manager",
+        "Senior Project Manager",
+        "Program Manager",
+        "Senior Program Manager",
+        "Director of Program Management"
+      ],
+      "pivots": [
+        "product-management",
+        "engineering-management"
+      ]
+    }
+  ]
+}

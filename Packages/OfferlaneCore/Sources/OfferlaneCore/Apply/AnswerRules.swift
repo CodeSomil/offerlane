@@ -59,7 +59,7 @@ public enum AnswerRules {
 
     public static func rules(_ p: Profile, jobLocation loc: String, consent: Bool, visa: Visa) -> [Rule] {
         let ps = p.personal, w = p.work, a = p.authorization, e = p.eeo, ed = p.education, m = p.misc
-        func yn(_ b: Bool) -> String { b ? "Yes" : "No" }
+        @Sendable func yn(_ b: Bool) -> String { b ? "Yes" : "No" }
         func opt(_ s: String) -> String? { s.isEmpty ? nil : s }
         let phone = ps.phone
         let cc = Re.groups("^\\+\\d{1,3}", phone, [])?.first ?? nil

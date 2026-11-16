@@ -1,0 +1,15 @@
+# Allowlist: the image gets only what the API and worker run. No node_modules, .env, fixtures or Mac sources.
+*
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!apps/api/package.json
+!apps/api/src
+!apps/api/migrations
+!libs/contract/package.json
+!libs/contract/src
+!libs/contract/openapi.json
+# The devissuer target only (local preview and load test); the api/worker/migrate targets never copy these.
+!apps/api/test/fakeIssuer.ts
+!apps/api/test/devIssuer.ts
+!apps/api/test/devIssuerApp.ts

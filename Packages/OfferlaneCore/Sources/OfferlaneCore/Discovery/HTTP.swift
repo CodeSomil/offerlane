@@ -8,9 +8,13 @@ public actor HTTP {
 
     let session: URLSession
     let minInterval: TimeInterval
+    /// false: a 429 comes straight back (for sources that already pace themselves, e.g. Adzuna's 6 h interval).
+    let retryRateLimit: Bool
     private var nextSlot: [String: Date] = [:]
 
-    public init(session: URLSession = .shared, minInterval: TimeInterval = 0.35) { self.session = session; self.minInterval = minInterval }
+    public init(session: URLSession = .shared, minInterval: TimeInterval = 0.35, retryRateLimit: Bool = true) {
+        self.session = session; self.minInterval = minInterval; self.retryRateLimit = retryRateLimit
+    }
 
     public struct Response: Sendable {
         public let status: Int
@@ -46,7 +50,7 @@ public actor HTTP {
             do {
                 let (data, resp) = try await session.data(for: req)
                 let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
-                if code == 429 && attempt < 2 {
+                if code == 429 && retryRateLimit && attempt < 2 {
                     let after = Double((resp as? HTTPURLResponse)?.value(forHTTPHeaderField: "Retry-After") ?? "") ?? Double(5 * (attempt + 1))
                     nextSlot[host] = Date().addingTimeInterval(min(after, 30))
                     continue

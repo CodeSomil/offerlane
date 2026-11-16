@@ -12,7 +12,11 @@ public enum Log {
 
     public static func redact(_ s: String) -> String {
         var x = Re.sub("[\\w.+-]+@[\\w-]+\\.[\\w.]+", "<email>", s)
-        x = Re.sub("\\+?\\d[\\d ()-]{8,}\\d", "<phone>", x)
+        // Phone numbers, but not dates or times ("2026-11-01", "2026-11-01 23:06").
+        x = Re.sub("\\+?\\d[\\d ()-]{8,}\\d", x) { g in
+            let m = g[0] ?? ""
+            return Re.search("^\\d{4}-\\d{2}-\\d{2}( \\d{1,2})?$", m, []) ? m : "<phone>"
+        }
         x = Re.sub("sk-ant-[A-Za-z0-9_-]+", "<key>", x)
         return x
     }

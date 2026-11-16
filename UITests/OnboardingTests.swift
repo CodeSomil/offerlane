@@ -6,8 +6,11 @@ final class OnboardingTests: XCTestCase {
 
     func fixture(_ name: String) -> String { Bundle(for: Self.self).path(forResource: name, ofType: nil)! }
 
-    func launch(dark: Bool, files: [String]) -> XCUIApplication {
+    func launch(dark: Bool, files: [String], env: [String: String] = [:]) -> XCUIApplication {
         let app = XCUIApplication()
+        app.launchEnvironment["OFFERLANE_LEGACY_DIR"] = "/nonexistent"   // never the real ~/Documents data
+        app.launchEnvironment.merge(env) { $1 }
+        app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]   // never block on "reopen windows?"
         app.launchEnvironment["OFFERLANE_HOME"] = NSTemporaryDirectory() + "offerlane-ui-" + UUID().uuidString
         app.launchEnvironment["OFFERLANE_FAKE_AI"] = "1"
         app.launchEnvironment["OFFERLANE_TEST_FILES"] = files.map(fixture).joined(separator: ":")
@@ -45,58 +48,112 @@ final class OnboardingTests: XCTestCase {
             XCTAssertTrue(waitFor { next.isEnabled })
             next.click()
 
-            // About you: prefilled from the resume; an edit survives Back.
+            // Step 4 of 4: the search is drafted from the resume; Find Jobs is one click away.
+            XCTAssertTrue(app.staticTexts["Ready to find jobs"].waitForExistence(timeout: 5))
+            let findNow = app.buttons["onboarding.findNow"]
+            XCTAssertTrue(app.staticTexts["finish.titles"].waitForExistence(timeout: 15), "titles drafted automatically")
+            XCTAssertTrue(waitFor { findNow.isEnabled }, "Find Jobs ready without visiting any optional screen")
+            XCTAssertFalse(next.exists, "the last step has no Next")
+            snap(app, "3-ready-\(mode)")
+
+            // Optional: About you, prefilled from the resume; edits survive leaving and coming back.
+            app.buttons["finish.editAbout"].click()
             XCTAssertTrue(app.staticTexts["Used to fill application forms. We filled in what we could from your resume — check it and add the rest."].waitForExistence(timeout: 5))
             XCTAssertEqual(app.textFields["First name"].value as? String, "Test")
             XCTAssertEqual(app.textFields["Email"].value as? String, "test@example.com")
             let notice = app.textFields["Notice period"]; reveal(notice, in: app); notice.click(); notice.typeText("3 months")
-            snap(app, "3-about-\(mode)")
+            snap(app, "4-about-\(mode)")
+            app.buttons["onboarding.done"].click()
+            XCTAssertTrue(app.staticTexts["Ready to find jobs"].waitForExistence(timeout: 5), "Done returns to the last step")
+
+            // Back through the main steps keeps everything.
             back.click()
             XCTAssertTrue(app.staticTexts["Add your resumes"].waitForExistence(timeout: 5))
             XCTAssertEqual(app.staticTexts.matching(identifier: "upload.success").count, 2, "uploads survive going back")
             back.click()
             XCTAssertTrue(app.staticTexts["Choose your AI"].waitForExistence(timeout: 5))
             next.click(); next.click()
+            XCTAssertTrue(app.staticTexts["Ready to find jobs"].waitForExistence(timeout: 5))
+            app.buttons["finish.editAbout"].click()
             XCTAssertTrue(app.textFields["Notice period"].waitForExistence(timeout: 5))
             XCTAssertEqual(app.textFields["Notice period"].value as? String, "3 months", "edits survive Back and Next")
+            back.click()
 
-            // Search: drafted by the AI on arrival.
-            next.click()
+            // Optional: Search.
+            app.buttons["finish.editSearch"].click()
             XCTAssertTrue(app.buttons["Remove Scale AI"].waitForExistence(timeout: 15), "AI-drafted companies shown")
-            XCTAssertTrue(waitFor { next.isEnabled })
             let add = app.textFields["Add company"]; reveal(add, in: app); add.click(); add.typeText("https://jobs.lever.co/acme-robotics\r")
             XCTAssertTrue(app.buttons["Remove Acme Robotics"].waitForExistence(timeout: 5), "careers URL detected")
-            snap(app, "4-search-\(mode)")
+            snap(app, "5-search-\(mode)")
+            app.buttons["onboarding.done"].click()
 
-            next.click()
+            // Optional: Email and Notifications.
+            XCTAssertTrue(app.buttons["finish.editEmail"].waitForExistence(timeout: 5))
+            app.buttons["finish.editEmail"].click()
             XCTAssertTrue(app.staticTexts["Track replies by email"].waitForExistence(timeout: 5))
-            snap(app, "5-email-\(mode)")
-            next.click()
+            snap(app, "6-email-\(mode)")
+            back.click()
+            app.buttons["finish.editNotifications"].click()
             XCTAssertTrue(app.staticTexts["Notifications"].firstMatch.waitForExistence(timeout: 5))
-            snap(app, "6-notifications-\(mode)")
-            next.click()
-            XCTAssertTrue(app.staticTexts["You're all set"].waitForExistence(timeout: 5))
-            snap(app, "7-finish-\(mode)")
+            snap(app, "7-notifications-\(mode)")
+            back.click()
+
+            XCTAssertTrue(app.staticTexts["Ready to find jobs"].waitForExistence(timeout: 5))
             app.buttons["onboarding.notNow"].click()
-            XCTAssertTrue(app.outlines.staticTexts["Matches"].waitForExistence(timeout: 5), "main window after setup")
+            XCTAssertTrue(app.outlines.staticTexts["Discover"].waitForExistence(timeout: 5), "main window after setup")
             app.terminate()
         }
     }
 
-    /// Settings → Import, offered in the Resumes step when the previous-version (v2) folder is on this Mac.
+    /// Settings → Import, offered in the Resumes step when a previous-version (v2) folder exists.
+    /// Uses a tiny synthetic v2 folder, never the real ~/Documents data (importer details: core ImporterTests).
     func testImportPreviousVersion() throws {
-        // The test runner is sandboxed and can't see ~/Documents; the app can, and offers Import only when the folder exists.
-        let app = launch(dark: false, files: [])
+        let app = launch(dark: false, files: [], env: ["OFFERLANE_LEGACY_DIR": try makeLegacyFolder().path])
         app.buttons["onboarding.next"].click()
         let importButton = app.buttons["Import"]
-        try XCTSkipUnless(importButton.waitForExistence(timeout: 5), "previous-version (v2) data isn't on this Mac")
+        XCTAssertTrue(importButton.waitForExistence(timeout: 5), "Import offered when the v2 folder exists")
         importButton.click()
         XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "value CONTAINS 'Imported 2 resume versions'")).firstMatch.waitForExistence(timeout: 30))
         XCTAssertEqual(app.staticTexts.matching(identifier: "upload.success").count, 2)
         snap(app, "import-v2")
         app.buttons["onboarding.next"].click()
+        app.buttons["finish.editAbout"].click()
         XCTAssertFalse((app.textFields["First name"].value as? String ?? "").isEmpty, "profile imported")
         app.terminate()
+    }
+
+    /// A slow import says so after the timeout, offers no retry while it runs, and a late finish replaces the message.
+    func testImportTimeoutThenLateFinish() throws {
+        let app = launch(dark: false, files: [], env: ["OFFERLANE_LEGACY_DIR": try makeLegacyFolder().path,
+                                                       "OFFERLANE_IMPORT_TIMEOUT": "2", "OFFERLANE_IMPORT_STALL": "6"])
+        app.buttons["onboarding.next"].click()
+        XCTAssertTrue(app.buttons["Import"].waitForExistence(timeout: 5))
+        app.buttons["Import"].click()
+        let slow = app.staticTexts.containing(NSPredicate(format: "value BEGINSWITH %@", "The import hasn't finished after 2 seconds")).firstMatch
+        XCTAssertTrue(slow.waitForExistence(timeout: 5), "timeout explained")
+        XCTAssertFalse(app.buttons["Try Again"].exists, "no retry while the import still runs")
+        let done = app.staticTexts.containing(NSPredicate(format: "value CONTAINS 'Imported 2 resume versions'")).firstMatch
+        XCTAssertTrue(done.waitForExistence(timeout: 15), "late finish shows the report")
+        XCTAssertFalse(slow.exists, "timeout message cleared")
+        app.terminate()
+    }
+
+    /// A minimal v2 data folder: a profile and two resume versions.
+    private func makeLegacyFolder() throws -> URL {
+        let dir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("offerlane-v2-" + UUID().uuidString)
+        func write(_ path: String, _ text: String) throws {
+            let url = dir.appendingPathComponent(path)
+            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try text.write(to: url, atomically: true, encoding: .utf8)
+        }
+        try write("profile.json", #"{"personal": {"first_name": "Test", "last_name": "Person", "email": "test@example.com"}, "work": {}, "education": {}, "authorization": {}, "eeo": {}, "misc": {}, "prefs": {}}"#)
+        try write("resumes/default.json", #"{"name": "ic"}"#)
+        for (v, label) in [("ic", "Individual contributor"), ("lead", "Team lead")] {
+            try write("resumes/\(v)/resume.json", #"{"variant": "\#(v)", "label": "\#(label)", "format": "html", "links": {}, "name": "Test Person", "summary": "Data scientist."}"#)
+            try write("resumes/\(v)/source.txt", "Test Person\nData scientist.")
+        }
+        addTeardownBlock { try? FileManager.default.removeItem(at: dir) }
+        return dir
     }
 
     /// Scroll the wizard until `e` sits clear of the bottom button bar.

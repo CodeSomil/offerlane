@@ -1,0 +1,29 @@
+{
+  "count": 3,
+  "results": [
+    {
+      "id": "4711",
+      "title": "Senior <strong>Data Scientist</strong>",
+      "description": "You will build machine learning models in python. Experience with sql required&hellip;",
+      "created": "2026-11-08T09:30:00Z",
+      "redirect_url": "https://www.adzuna.com/details/4711?utm_medium=api",
+      "company": {"display_name": "Faraway Labs"},
+      "location": {"display_name": "Austin, Texas"},
+      "salary_min": 140000, "salary_max": 170000
+    },
+    {
+      "id": "4712",
+      "title": "Account Executive",
+      "description": "Sell things.",
+      "created": "2026-11-07T10:00:00Z",
+      "redirect_url": "https://www.adzuna.com/details/4712",
+      "company": {"display_name": "SellCo"},
+      "location": {"display_name": "Remote"}
+    },
+    {
+      "id": "4713",
+      "title": "No company row",
+      "redirect_url": "https://www.adzuna.com/details/4713"
+    }
+  ]
+}

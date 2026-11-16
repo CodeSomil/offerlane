@@ -1,19 +1,22 @@
-name: Release
-# Run manually (Actions → Release → Run workflow) with a tag like v0.2.0 to build and publish installers from CI.
+# Creates a DRAFT GitHub release when a version tag (v0.2.0, …) is pushed, with the notes from docs/RELEASE_NOTES.md.
+# The signed, notarised Offerlane-<version>.dmg / .pkg / SHA256SUMS.txt are built on the maintainer's Mac
+# (scripts are not public) and attached by hand before publishing the draft. Nothing is built here.
+name: Draft release
 on:
-  workflow_dispatch:
-    inputs:
-      tag: { description: 'Release tag, e.g. v0.2.0', required: true }
+  push:
+    tags: ["v*.*.*"]
 permissions:
   contents: write
 jobs:
-  package:
-    runs-on: macos-15
+  draft:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: brew install xcodegen
-      - name: Build installers
-        run: scripts/package.sh
-      - name: Publish release
-        env: { GH_TOKEN: '${{ github.token }}' }
-        run: gh release create "${{ inputs.tag }}" dist/Offerlane-*.dmg dist/Offerlane-*.pkg dist/SHA256SUMS.txt --title "Offerlane ${{ inputs.tag }}" --generate-notes
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 && { echo "Release $TAG already exists"; exit 0; }
+          gh release create "$TAG" --draft --title "Offerlane ${TAG#v}" --notes-file docs/RELEASE_NOTES.md
+          echo "Draft created. Attach Offerlane-${TAG#v}.dmg, .pkg and SHA256SUMS.txt, then publish."

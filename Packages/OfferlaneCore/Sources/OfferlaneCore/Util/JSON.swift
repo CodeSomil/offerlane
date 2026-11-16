@@ -89,8 +89,9 @@ public enum JSONValue: Codable, Hashable, Sendable {
         }
     }
     public subscript(key: String) -> JSONValue? { if case .object(let o) = self { return o[key] }; return nil }
+    /// Numbers become strings; integers only up to 2^53, past that `Int(n)` could trap.
     public var string: String? {
-        switch self { case .string(let s): s; case .number(let n): n == n.rounded() ? String(Int(n)) : String(n); default: nil }
+        switch self { case .string(let s): s; case .number(let n): n == n.rounded() && abs(n) <= 9_007_199_254_740_992 ? String(Int(n)) : String(n); default: nil }
     }
     public var double: Double? { switch self { case .number(let n): n; case .string(let s): Double(s); default: nil } }
     public var array: [JSONValue]? { if case .array(let a) = self { return a }; return nil }

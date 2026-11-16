@@ -1,0 +1,1089 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Offerlane API",
+    "version": "1",
+    "description": "Sync blobs are end-to-end encrypted; the server never sees readable resume or profile text."
+  },
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Health": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "Me": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "SyncBlob": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "keyId": {
+            "type": "string"
+          },
+          "ciphertext": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "keyId",
+          "ciphertext"
+        ]
+      },
+      "SyncPutResult": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
+      "JobPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Job"
+            }
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next"
+        ]
+      },
+      "Job": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "ats": {
+            "type": "string",
+            "enum": [
+              "greenhouse",
+              "lever",
+              "ashby",
+              "workable",
+              "smartrecruiters",
+              "workday"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "company": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "remote": {
+            "type": "boolean"
+          },
+          "url": {
+            "type": "string"
+          },
+          "applyUrl": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "postedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "YYYY-MM-DD (UTC), or null when the board gives no date."
+          }
+        },
+        "required": [
+          "id",
+          "ats",
+          "title",
+          "company",
+          "location",
+          "remote",
+          "url",
+          "applyUrl",
+          "description",
+          "postedAt"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/healthz": {
+      "get": {
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "Up.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/readyz": {
+      "get": {
+        "operationId": "ready",
+        "responses": {
+          "200": {
+            "description": "Ready: the database answers and its newest migration is applied.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Not ready; take this instance out of rotation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "not_ready"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me": {
+      "get": {
+        "operationId": "getMe",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The caller's opaque user id.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired bearer token.",
+            "headers": {
+              "www-authenticate": {
+                "schema": {
+                  "type": "string"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "unauthorized"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Per-user rate limit.",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string",
+                  "description": "Seconds to wait."
+                },
+                "required": true,
+                "description": "Seconds to wait."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "rate_limited"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error; no detail is ever sent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "internal"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sync/{kind}": {
+      "get": {
+        "operationId": "getSync",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "keyring",
+                "profile",
+                "resumes",
+                "applications",
+                "contacts",
+                "settings"
+              ]
+            },
+            "required": true,
+            "name": "kind",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The stored ciphertext.",
+            "headers": {
+              "etag": {
+                "schema": {
+                  "type": "string",
+                  "description": "The blob version, as \"v<n>\".",
+                  "example": "\"v3\""
+                },
+                "required": true,
+                "description": "The blob version, as \"v<n>\"."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncBlob"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unknown kind.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "bad_request"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired bearer token.",
+            "headers": {
+              "www-authenticate": {
+                "schema": {
+                  "type": "string"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "unauthorized"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Nothing stored yet.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "not_found"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Per-user rate limit.",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string",
+                  "description": "Seconds to wait."
+                },
+                "required": true,
+                "description": "Seconds to wait."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "rate_limited"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error; no detail is ever sent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "internal"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "putSync",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "keyring",
+                "profile",
+                "resumes",
+                "applications",
+                "contacts",
+                "settings"
+              ]
+            },
+            "required": true,
+            "name": "kind",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\"v[1-9]\\d{0,15}\"$",
+              "description": "Replace: the version you read, \"v<n>\". Send this or If-None-Match."
+            },
+            "required": false,
+            "description": "Replace: the version you read, \"v<n>\". Send this or If-None-Match.",
+            "name": "if-match",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "*"
+              ],
+              "description": "Create only."
+            },
+            "required": false,
+            "description": "Create only.",
+            "name": "if-none-match",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[\\x21-\\x7e]{1,255}$",
+              "description": "Safe retries for 24 h. Use a new key after a 4xx."
+            },
+            "required": false,
+            "description": "Safe retries for 24 h. Use a new key after a 4xx.",
+            "name": "idempotency-key",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "keyId": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                  },
+                  "ciphertext": {
+                    "type": "string",
+                    "minLength": 4,
+                    "description": "Standard base64 (padded) of the client-encrypted blob, at most 8 MiB decoded."
+                  }
+                },
+                "required": [
+                  "keyId",
+                  "ciphertext"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stored; the server set the new version.",
+            "headers": {
+              "etag": {
+                "schema": {
+                  "type": "string",
+                  "description": "The blob version, as \"v<n>\".",
+                  "example": "\"v3\""
+                },
+                "required": true,
+                "description": "The blob version, as \"v<n>\"."
+              },
+              "idempotent-replayed": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ],
+                  "description": "Present when this is the stored answer to an earlier request with the same Idempotency-Key."
+                },
+                "required": false,
+                "description": "Present when this is the stored answer to an earlier request with the same Idempotency-Key."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPutResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad body, base64, precondition or Idempotency-Key.",
+            "headers": {
+              "idempotent-replayed": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ],
+                  "description": "Present when this is the stored answer to an earlier request with the same Idempotency-Key."
+                },
+                "required": false,
+                "description": "Present when this is the stored answer to an earlier request with the same Idempotency-Key."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "bad_request",
+                        "bad_precondition",
+                        "bad_ciphertext",
+                        "bad_idempotency_key"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired bearer token.",
+            "headers": {
+              "www-authenticate": {
+                "schema": {
+                  "type": "string"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "unauthorized"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version conflict, or the same Idempotency-Key is still running.",
+            "headers": {
+              "idempotent-replayed": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ],
+                  "description": "Present when this is the stored answer to an earlier request with the same Idempotency-Key."
+                },
+                "required": false,
+                "description": "Present when this is the stored answer to an earlier request with the same Idempotency-Key."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "conflict",
+                        "idempotency_key_in_flight"
+                      ]
+                    },
+                    "version": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "description": "`conflict` only: the current version (null if the blob doesn't exist)."
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Ciphertext over 8 MiB.",
+            "headers": {
+              "idempotent-replayed": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ],
+                  "description": "Present when this is the stored answer to an earlier request with the same Idempotency-Key."
+                },
+                "required": false,
+                "description": "Present when this is the stored answer to an earlier request with the same Idempotency-Key."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "too_large"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Body is not JSON.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "unsupported_media_type"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Idempotency-Key reused for a different request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "idempotency_key_reused"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Neither If-Match nor If-None-Match.",
+            "headers": {
+              "idempotent-replayed": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true"
+                  ],
+                  "description": "Present when this is the stored answer to an earlier request with the same Idempotency-Key."
+                },
+                "required": false,
+                "description": "Present when this is the stored answer to an earlier request with the same Idempotency-Key."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "precondition_required"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Per-user rate limit.",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string",
+                  "description": "Seconds to wait."
+                },
+                "required": true,
+                "description": "Seconds to wait."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "rate_limited"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error; no detail is ever sent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "internal"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs": {
+      "get": {
+        "operationId": "listJobs",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Full-text search (websearch syntax) over title, company and description."
+            },
+            "required": false,
+            "description": "Full-text search (websearch syntax) over title, company and description.",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "location",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "required": false,
+            "name": "remote",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "greenhouse",
+                "lever",
+                "ashby",
+                "workable",
+                "smartrecruiters",
+                "workday"
+              ]
+            },
+            "required": false,
+            "name": "ats",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$",
+              "description": "YYYY-MM-DD; must be a real day."
+            },
+            "required": false,
+            "description": "YYYY-MM-DD; must be a real day.",
+            "name": "posted_since",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "The `next` value of the previous page."
+            },
+            "required": false,
+            "description": "The `next` value of the previous page.",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page, newest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad filter or cursor.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "bad_request",
+                        "bad_cursor"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired bearer token.",
+            "headers": {
+              "www-authenticate": {
+                "schema": {
+                  "type": "string"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "unauthorized"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Per-user rate limit.",
+            "headers": {
+              "retry-after": {
+                "schema": {
+                  "type": "string",
+                  "description": "Seconds to wait."
+                },
+                "required": true,
+                "description": "Seconds to wait."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "rate_limited"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error; no detail is ever sent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "internal"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}

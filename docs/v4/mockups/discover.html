@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup: Discover</title>
+<link rel="stylesheet" href="../../../Packages/design-tokens/tokens.css">
+<link rel="stylesheet" href="mockups.css">
+<style>
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filters .chip { font-size: 12px; padding: 4px 10px; }
+  .list { display: grid; gap: 10px; }
+  .job { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 14px var(--space-l); }
+  .job.sel { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .job .title { font-weight: 700; font-size: 14px; }
+  .job .why { margin: 4px 0 6px; }
+  .job .why b { color: var(--text-primary); font-weight: 600; }
+  .job .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .job .side { display: flex; align-items: center; gap: 12px; }
+  .job .acts { display: flex; flex-direction: column; gap: 6px; }
+  .job .acts .btn { padding: 4px 10px; font-size: 12px; white-space: nowrap; }
+  .keys { display: flex; gap: 14px; flex-wrap: wrap; color: var(--text-secondary); font-size: 12px; padding: 8px 12px; border-radius: var(--radius-m);
+    background: var(--surface-sunken); align-self: flex-start; }
+</style>
+</head>
+<body>
+<header class="page-head">
+  <h1>Discover</h1>
+  <p>Roles worth your time, best fit first: a match ring, why it fits in one line, pay and visa at a glance, and keyboard triage. Demo data.</p>
+  <nav><a href="index.html">All mockups</a><a href="today.html">Today</a><a href="pipeline.html">Pipeline</a></nav>
+</header>
+<div class="pair">
+<section class="mac" data-active="find">
+  <main class="main">
+    <div class="head"><h2>Discover</h2><span class="meta">18 new roles · best fit first</span>
+      <div class="right"><button class="btn">Edit search</button><button class="btn primary">Find more</button></div></div>
+    <div class="filters"><span class="chip accent">Remote or Berlin</span><span class="chip accent">Sponsors visas</span><span class="chip plain">€80k+</span><span class="chip plain">Posted this week</span></div>
+
+    <div class="list">
+      <div class="card job sel">
+        <div class="mono" style="background: #0F766E">HH</div>
+        <div>
+          <div class="title">Senior Product Designer</div>
+          <div class="muted">Harbor Health · Berlin or remote (EU)</div>
+          <div class="why muted"><b>Why it fits:</b> 6 of 7 must-have skills; health-tech research matches your last two roles.</div>
+          <div class="chips"><span class="chip offer">€85–98k</span><span class="chip info">Sponsors visas</span><span class="chip plain">Posted 2 days ago</span></div>
+        </div>
+        <div class="side"><div class="ring" style="--p: 92; --c: var(--offer)"><span>92</span></div>
+          <div class="acts"><button class="btn primary">Approve <kbd>A</kbd></button><button class="btn">Decline <kbd>D</kbd></button></div></div>
+      </div>
+
+      <div class="card job">
+        <div class="mono" style="background: #4338CA">QF</div>
+        <div>
+          <div class="title">Design Lead, Payments</div>
+          <div class="muted">Quill Finance · Remote (EU)</div>
+          <div class="why muted"><b>Why it fits:</b> leads a team of 4, like your current role; asks for fintech, which you don't list yet.</div>
+          <div class="chips"><span class="chip offer">€95–110k</span><span class="chip warning">Visa not mentioned</span><span class="chip plain">Posted 5 days ago</span></div>
+        </div>
+        <div class="side"><div class="ring" style="--p: 84"><span>84</span></div>
+          <div class="acts"><button class="btn primary">Approve</button><button class="btn">Decline</button></div></div>
+      </div>
+
+      <div class="card job">
+        <div class="mono" style="background: #B45309">FS</div>
+        <div>
+          <div class="title">Product Designer, Growth</div>
+          <div class="muted">Fieldstone · Berlin (hybrid)</div>
+          <div class="why muted"><b>Why it fits:</b> strong on experimentation; 2 years under the 5 they ask for.</div>
+          <div class="chips"><span class="chip plain">Pay not listed</span><span class="chip info">Sponsors visas</span><span class="chip plain">Posted today</span></div>
+        </div>
+        <div class="side"><div class="ring" style="--p: 71; --c: var(--warning)"><span>71</span></div>
+          <div class="acts"><button class="btn primary">Approve</button><button class="btn">Decline</button></div></div>
+      </div>
+    </div>
+
+    <div class="keys" aria-label="Keyboard shortcuts"><span><kbd>J</kbd> <kbd>K</kbd> next / previous</span><span><kbd>A</kbd> approve</span><span><kbd>D</kbd> decline</span><span><kbd>↩</kbd> open posting</span></div>
+  </main>
+</section>
+</div>
+<script src="mockups.js"></script>
+</body>
+</html>

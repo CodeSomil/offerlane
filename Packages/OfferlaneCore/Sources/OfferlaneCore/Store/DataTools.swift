@@ -16,6 +16,10 @@ public enum DataTools {
         try enc.encode(JobsDoc(jobs: try store.jobs(), events: try store.events(limit: 100_000))).write(to: out.appendingPathComponent("jobs.json"))
         try enc.encode(try store.accounts()).write(to: out.appendingPathComponent("accounts.json"))
         try enc.encode(try store.usage(days: 3650)).write(to: out.appendingPathComponent("usage.json"))
+        try enc.encode(try Contacts.load(store)).write(to: out.appendingPathComponent("contacts.json"))
+        try enc.encode(try store.get(.offers, as: [Offer].self) ?? []).write(to: out.appendingPathComponent("offers.json"))
+        try enc.encode(try store.get(.interviewPrep, as: InterviewPrepState.self) ?? InterviewPrepState()).write(to: out.appendingPathComponent("interview-prep.json"))
+        try enc.encode(try store.get(.skillPlan, as: SkillPlanState.self) ?? SkillPlanState()).write(to: out.appendingPathComponent("skill-plan.json"))
         let rdir = out.appendingPathComponent("resumes", isDirectory: true)
         for v in try store.resumeVersions() {
             let d = rdir.appendingPathComponent(v.name, isDirectory: true)
@@ -35,8 +39,9 @@ public enum DataTools {
     /// Removes the database contents, every Keychain item, application folders, sponsor lists and logs.
     public static func deleteAll(store: Store, keychain: Keychain) throws {
         try store.eraseEverything()
-        keychain.deleteAll()
-        for d in [Paths.applications, Paths.sponsors, Paths.logs] { try? FileManager.default.removeItem(at: d) }
+        // The emptied database stays encrypted and open, so its key stays; every other secret goes.
+        for a in keychain.allAccounts() where a != Encryption.keyAccount { keychain.delete(account: a) }
+        for d in [Paths.applications, Paths.sponsors, Paths.logs] + Backup.leftovers(in: Paths.root) { try? FileManager.default.removeItem(at: d) }
         try Paths.ensure()
     }
 }

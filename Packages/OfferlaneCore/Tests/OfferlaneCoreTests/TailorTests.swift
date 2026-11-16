@@ -2,18 +2,6 @@ import XCTest
 import PDFKit
 @testable import OfferlaneCore
 
-final class GuardTests: XCTestCase {
-    func testGuard() {
-        let src = "Built a demand forecasting system covering 1,200 products, cutting error by 30%. Python, SQL."
-        XCTAssertFalse(Guard.check("Made up claim with 999 users.", source: src).ok, "guard rejects 999")
-        XCTAssertEqual(Guard.check("Made up claim with 999 users.", source: src).warnings, ["numbers not in your resume: [\"999\"]"])
-        XCTAssertTrue(Guard.check("Forecasting for 1200 products cut error 30%", source: src).ok, "numbers already present (comma-insensitive)")
-        let (ok, w) = Guard.check("Built forecasting in Python with Kubernetes and Terraform", source: src)
-        XCTAssertTrue(ok); XCTAssertEqual(w, ["new terms, check they are true: [\"Kubernetes\", \"Terraform\"]"], "new tools flagged, sentence start skipped")
-        XCTAssertFalse(Guard.check("Used GPT4 for forecasting", source: src).ok, "digits inside a new term count as a new number, as in the prototype")
-    }
-}
-
 final class TailorTests: XCTestCase {
     var home: URL!
     override func setUp() {

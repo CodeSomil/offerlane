@@ -25,6 +25,8 @@ public struct Job: Codable, Hashable, Sendable, Identifiable, FetchableRecord, P
     public var localScore: Double?
     public var llmScore: Int?
     public var llmReason: String = ""
+    /// "fit" (Best fit) or "stretch" (a step up or aside: an aspiration); set by scoring.
+    public var tier: String = ""
     public var variant: String = ""
     public var visa: String = ""
     public var minYears: Int?
@@ -40,6 +42,8 @@ public struct Job: Codable, Hashable, Sendable, Identifiable, FetchableRecord, P
     public var notes: String = ""
     /// "Use my resume as-is": skip the tailoring call.
     public var quick = false
+    /// When the next screen or interview is, as the user entered it (local "yyyy-MM-dd'T'HH:mm:ss").
+    public var interviewAt: String?
 
     public init(company: String, title: String, location: String = "", url: String = "", id: String? = nil) {
         self.company = company; self.title = title; self.location = location; self.url = url

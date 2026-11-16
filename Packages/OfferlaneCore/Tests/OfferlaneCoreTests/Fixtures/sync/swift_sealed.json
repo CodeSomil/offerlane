@@ -1,0 +1,38 @@
+{
+  "blobs" : [
+    {
+      "blob" : "Aeuy84h83Lc5PhZfWYSXRiKGwwbjqtXUbEUyCbnzAGlj29Fov6g/EXI4bzAcr2wK+Gp9LQnL8vY3Uws+x23ovuseaIn4dfzCg2cf",
+      "keyId" : "0123abcd0123abcd",
+      "kind" : "resumes",
+      "plaintext" : "{\"name\":\"Zoë Example\",\"label\":\"Café ☕️\"}",
+      "version" : 2
+    },
+    {
+      "blob" : "Ad2BYi9uNCUZaMGQoDhDv5+7ME7IGxhJvu3Q33ZHfzRX",
+      "keyId" : "0123abcd0123abcd",
+      "kind" : "settings",
+      "plaintext" : "null",
+      "version" : 1
+    },
+    {
+      "blob" : "AVN6nNCLyFl2kNYCR6reIvdrNrR+iXuSaEwGLGerl1mAfzTOCSpKBx7PPK17QFByjbar4pkBnmXAf0CR+poimG7dE0fgiSKNb+eoAZxZT2joDdaXxb+QeEhQgoOxpoISPcO+Qw3PZPMe0FudMHkf0V44UqLU22F2THt8xlRCvhzhy2VSwIiLsx6bqQtaYDFL6ZUBnpFGZLXZ5LsP2MOS+ixFsDGOybOO8u4GRuo4a3qSRIkgOGbng2shW2P3LlRzNQb2tt66/GPkTyjKruBH4IlIm9TQPqrXet7hrqQRltOnFYX/t8AfKv5MqRRjAo4YEOhjgIQpvIenuRCOMGLFj5KKZgUzR7/JGGPpP/FLDBiA/BgjATM7vw+bOkXjSQfIuBAmHvdemHyYzJs9iUneRPlcgXfvfuI7j5D6qSPIMjqUJ9Duk+XV5zqJ70ayyR4Sp7Jgvi++VHk6ofE+RHVXAJZFf6rJMRBDPej3BmgEbQkDOP/kVp0OHvTSvS/usUROKtGWat6mtfDKBGDaji7eJKqTlRcsscZW4k8sy4vQ4O24fUW4RW+KuBij0HPob1Vl3RVlKqV5FEYdOu350k7K5qCwEF968269rBjRpASm8LIvE7JbIsy7duaxDa5TboSudETTf1caZgcWlWLLQVN6BAGzoVRK7+Csqkt/F2hTZv4m+sPzvkWZ4ODzYGRYDmnlSALb7nZwMMsiGAOIezEtLz3KMO+oEuzUr9BZKA3LzNf+tevQKKxH4I30EmoV2tzkO2LMsIG0PvYjU+9p87EBmLWNPWXttZ6LV1yUI2I8fcP2Pm4hfnz+U2twav8ghPgdKzNAjNfPcXbBQKYyKOUYcX/4EMiYlsup1PVZR9WAb6jai5nzpM0K+t22IhtYZZMcFAoZO8Tx9hJ0Xn/q/BR5/njDQAEUH+UwK+8mL5Ubue55sGoHlLjyTJTDLZVFaIj1atrmcIXGhL/7xWqESAUG9a8Syd7cH0uDDQc8EsUZZiYvViOlCcqp+xF4G2MOPwgHBYvfAHTm6xWEiGHp30iQjkmmX/UMePBB5G2RjEwIfS+VFgq376brUMc33lz5nKa1NgfMW+/7qJ5GJ7j/tOmjOcxOYaGsdw2pa0slSJ7qdfE961J7rWg8Nk/cPUoBQD2+8jy/p/rXw5K4x01+x9H+VnvCzawpNHAKlYjjLT+jw+M1Ly2bQVGNMm+ROPsobVtF6h3NeCVI1TtsssuaY7WrGcIq08bdjYZmzX2LsEgIKkz7z0BWANg=",
+      "keyId" : "0123abcd0123abcd",
+      "kind" : "profile",
+      "plaintext" : "{\"authorization\":{\"authorized_countries\":[\"United Kingdom\"],\"citizenship\":\"\",\"needs_sponsorship\":true},\"education\":{\"degree\":\"\",\"graduation_year\":\"\",\"school\":\"\"},\"eeo\":{\"disability\":\"Decline to self-identify\",\"gender\":\"Decline to self-identify\",\"race\":\"Decline to self-identify\",\"sexual_orientation\":\"Decline to self-identify\",\"veteran\":\"Decline to self-identify\"},\"misc\":{\"how_heard\":\"Company website\",\"pronouns\":\"\",\"start_date\":\"\"},\"personal\":{\"address\":\"\",\"city\":\"\",\"country\":\"\",\"email\":\"\",\"first_name\":\"\",\"full_name\":\"\",\"github\":\"\",\"last_name\":\"\",\"linkedin\":\"\",\"phone\":\"\",\"portfolio\":\"\",\"postal_code\":\"\",\"state\":\"\"},\"prefs\":{\"dealbreakers\":\"no on-site 5 days\",\"notes\":\"prefers fintech\",\"paper\":\"A4\"},\"work\":{\"current_company\":\"Acme\",\"current_salary\":\"£70k\",\"current_title\":\"Senior Data Scientist\",\"expected_salary\":\"£85k\",\"notice_period\":\"\",\"open_to_remote\":true,\"willing_to_relocate\":false,\"years_experience\":\"5\"}}",
+      "version" : 4
+    },
+    {
+      "blob" : "AVb4+DB4meDKAlk7YYS0As/Odz3eMHGR7Ra6yxJX2TYMpWFDAWQbwv97kkNTuQhhQJLp7dAVmfIr7HHwU4vv3TsuVExdMDcubcKGVIJ5pFDrTCjYnV7KZtn4ZmNQk2XxhJzCiWoFnVAI/t2Ap3MvJL/Cx0f3iFrtAB+dXy/p/qsGBpS1XYRgN5C8hWvobz+vcVh6YdHBxgdf3ojkqbop4yjdqovtq5aH0850UwxrGtjB2eDb1JJQ2GG4VVJxixpbfe5lWYm4a3VyOWysmct+9bgxwXqUiSPJRQCT2UVeBFemmz1AnYMneB+3qUJwx+N17Euo5DiPY1amKcyqxof0CuSoI3qRCmWT+bxflAWtOtVJadSipJaUwDq+fwwCk0ubPogK7gk7k+ssqQ11ugDrpyvSas+PtGo9WS83fBX9lMzVGjyi7g1F9BOPmytY71Yj/SpDAttebG41+mHRVj0CNGybel2+zhuX04md8Bl4vWhimpdM+JZ/f6Go7g0I7jQMwfE0/D8wWpoogUL7s/gCJyVwVNUKf0XsL84FPVWpsnOUdvPlOw==",
+      "keyId" : "0123abcd0123abcd",
+      "kind" : "applications",
+      "plaintext" : "{\"gh:acme:1\":{\"created\":\"2026-11-16T11:47:08.000Z\",\"job\":{\"apply_url\":\"\",\"ats\":\"greenhouse\",\"ats_slug\":\"\",\"company\":\"Acme Ünited\",\"description\":\"\",\"id\":\"gh:acme:1\",\"location\":\"Zürich\",\"min_years\":3,\"posted\":\"2026-11-01\",\"tailor_note\":\"\",\"title\":\"Data Scientist\",\"url\":\"https://example.com/j/1\",\"variant\":\"\",\"visa\":\"\"},\"score\":0.82,\"status\":\"tailoring\",\"updated\":\"2026-11-16T11:47:08.000Z\"}}",
+      "version" : 3
+    }
+  ],
+  "keyring" : {
+    "blob" : "ARMgpzQ03A05BM7FVtcfVLGmJyFHwaHaTn10IiLJy+IH+w4dLwvtZQIOMsKb1F2Z/nOMozKAI4PPt69vZTnlfNfTJpXS5iG5VqTjG1g=",
+    "ringId" : "rk-1",
+    "version" : 1
+  },
+  "recoveryKey" : "UCQ2-FI5E-UWTK-PKFJ-VKV2-ZLNO-V4"
+}

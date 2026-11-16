@@ -1,0 +1,123 @@
+{
+ "fallback": "https://www.adzuna.co.uk",
+ "attribution": [
+  {
+   "url": "https://www.adzuna.com/details/4711?se=x",
+   "expect": "https://www.adzuna.com"
+  },
+  {
+   "url": "https://www.adzuna.co.uk/jobs/land/ad/1",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "https://www.adzuna.com.au/details/2",
+   "expect": "https://www.adzuna.com.au"
+  },
+  {
+   "url": "https://adzuna.de/details/3",
+   "expect": "https://adzuna.de"
+  },
+  {
+   "url": "https://WWW.ADZUNA.DE:8443/x?q=1",
+   "expect": "https://www.adzuna.de"
+  },
+  {
+   "url": "https://www.adzuna.com.evil.io/x",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "https://adzuna.co.uk.evil.io/x",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "https://adzuna.com@evil.io/x",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "https://adzuna.io/x",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "https://adzuna.com./x",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "https://evil.io/adzuna.com",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "http://www.adzuna.com/x",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "https://notadzuna.com/x",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "HTTPS://adzuna.com/",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "https:adzuna.com/x",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "  https://adzuna.com/",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "https://adzuna.com\t/x",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "https://evil.com\\@adzuna.com/",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "https://adzuna.com/x\n",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "https://adzuna.com/x\r\n",
+   "expect": "https://www.adzuna.co.uk"
+  },
+  {
+   "url": "https://adzuna.com/x﻿",
+   "expect": "https://www.adzuna.co.uk"
+  }
+ ],
+ "defaultCountry": [
+  {
+   "region": "GB",
+   "expect": "gb"
+  },
+  {
+   "region": "UK",
+   "expect": "gb"
+  },
+  {
+   "region": "uk",
+   "expect": "gb"
+  },
+  {
+   "region": "DE",
+   "expect": "de"
+  },
+  {
+   "region": "JP",
+   "expect": "us"
+  },
+  {
+   "region": "",
+   "expect": "us"
+  },
+  {
+   "region": null,
+   "expect": "us"
+  }
+ ]
+}

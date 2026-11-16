@@ -7,19 +7,25 @@ public final class Store: @unchecked Sendable {
     public let db: any DatabaseWriter
 
     /// Opens (and migrates) the database at `url`. Pass nil for an in-memory database (tests).
-    public init(url: URL? = nil) throws {
+    /// With `migrate: false` (the offerlane-mcp helper) the schema is never changed: a database the running app hasn't
+    /// brought up to date is refused instead. `key` opens an encrypted (SQLCipher) database; nil = unencrypted.
+    public init(url: URL? = nil, key: Data? = nil, migrate: Bool = true) throws {
         if let url {
-            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            if migrate { try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true) }
             var config = Configuration(); config.foreignKeysEnabled = true
+            if let key { Encryption.configure(&config, key: key) }
+            // The app and the offerlane-mcp helper can write at the same time: wait for the other's write instead of failing.
+            config.busyMode = .timeout(5)
             db = try DatabasePool(path: url.path, configuration: config)
         } else {
             db = try DatabaseQueue()
         }
-        try Self.migrator.migrate(db)
+        if migrate { try Self.migrator.migrate(db) }
+        else if try !db.read({ try Self.migrator.hasCompletedMigrations($0) }) { throw StoreError.outdated }
     }
 
     public static func openDefault() throws -> Store {
-        try Paths.ensure(); return try Store(url: Paths.root.appendingPathComponent("offerlane.sqlite"))
+        try Paths.ensure(); return try Backup.openStore(root: Paths.root, secrets: Keychain(service: Paths.keychainService(for: Paths.account)))
     }
 
     static var migrator: DatabaseMigrator {
@@ -82,23 +88,72 @@ public final class Store: @unchecked Sendable {
                 t.column("usd", .double).notNull().defaults(to: 0)
             }
         }
+        // v0.2: answers the AI already gave, keyed by a hash of everything that went into the question,
+        // so a repeated posting or an unchanged email never costs a second call. Additive: v1 data is untouched.
+        m.registerMigration("v2-llm-cache") { db in
+            try db.create(table: "llm_cache") { t in
+                t.primaryKey("key", .text)
+                t.column("kind", .text).notNull()
+                t.column("value", .blob).notNull()
+                t.column("created", .text).notNull()
+            }
+            try db.create(index: "llm_cache_kind", on: "llm_cache", columns: ["kind", "created"])
+        }
+        // v0.3: result tier from scoring ("fit" | "stretch"; empty = not scored yet).
+        m.registerMigration("v3-job-tier") { db in
+            try db.alter(table: "job") { t in t.add(column: "tier", .text).notNull().defaults(to: "") }
+        }
+        // v4 P1.8: the interview's date and time, entered by the user (local ISO seconds; NULL = not set).
+        m.registerMigration("v4-interview-at") { db in
+            try db.alter(table: "job") { t in t.add(column: "interview_at", .text) }
+        }
         return m
     }
 
+    // MARK: AI answer cache
+
+    public func cached(_ key: String) throws -> Data? {
+        try db.read { try Data.fetchOne($0, sql: "SELECT value FROM llm_cache WHERE key = ?", arguments: [key]) }
+    }
+    public func cache(_ key: String, kind: String, value: Data) throws {
+        try db.write { try $0.execute(sql: "INSERT OR REPLACE INTO llm_cache(key, kind, value, created) VALUES (?, ?, ?, ?)",
+                                      arguments: [key, kind, value, Dates.now()]) }
+    }
+    /// Keeps the cache small: drops entries older than `days`.
+    @discardableResult
+    public func pruneCache(olderThanDays days: Int = 120) throws -> Int {
+        let cutoff = Dates.now(Date().addingTimeInterval(-Double(days) * 86_400))
+        return try db.write { db in try db.execute(sql: "DELETE FROM llm_cache WHERE created < ?", arguments: [cutoff]); return db.changesCount }
+    }
+    public func cacheCount() throws -> Int { try db.read { try Int.fetchOne($0, sql: "SELECT COUNT(*) FROM llm_cache") ?? 0 } }
+
     // MARK: key-value documents (profile, search, settings, caches)
 
-    public enum Key: String, Sendable { case profile, search, settings, atsCache = "ats_resolved", sponsorState = "sponsor_state" }
+    public enum Key: String, Sendable { case profile, search, settings, atsCache = "ats_resolved", sponsorState = "sponsor_state", rankBrief = "rank_brief", sourceRuns = "source_runs", boardRegistry = "board_registry", linkChecks = "link_checks", skillPlan = "skill_plan", interviewPrep = "interview_prep", offers, contacts,
+                                     syncState = "sync_state", syncRecords = "sync_records", syncBackups = "sync_backups" }
 
+    /// An unreadable document is moved to `<key>.corrupt-<day>` (bytes kept) and reads as empty, so the app still opens.
     public func get<T: Decodable>(_ key: Key, as: T.Type = T.self) throws -> T? {
-        try db.read { db in
-            guard let data = try Data.fetchOne(db, sql: "SELECT value FROM kv WHERE key = ?", arguments: [key.rawValue]) else { return nil }
-            return try JSONCoding.decoder.decode(T.self, from: data)
+        guard let data = try db.read({ try Data.fetchOne($0, sql: "SELECT value FROM kv WHERE key = ?", arguments: [key.rawValue]) }) else { return nil }
+        do { return try JSONCoding.decoder.decode(T.self, from: data) } catch {
+            try db.write { db in
+                try db.execute(sql: "INSERT OR REPLACE INTO kv(key, value) VALUES (?, ?)", arguments: ["\(key.rawValue).corrupt-\(Dates.today())", data])
+                try db.execute(sql: "DELETE FROM kv WHERE key = ?", arguments: [key.rawValue])
+            }
+            Log.error("store: \(key.rawValue) couldn't be read; kept a copy and reset it")
+            return nil
         }
+    }
+    /// Keys of documents set aside by `get` because they couldn't be read (newest day last).
+    public func corruptBackups() throws -> [String] {
+        try db.read { try String.fetchAll($0, sql: "SELECT key FROM kv WHERE key LIKE '%.corrupt-%' ORDER BY substr(key, -10), key") }
     }
     public func set<T: Encodable>(_ key: Key, _ value: T) throws {
         let data = try JSONCoding.encoder.encode(value)
         try db.write { db in try db.execute(sql: "INSERT OR REPLACE INTO kv(key, value) VALUES (?, ?)", arguments: [key.rawValue, data]) }
     }
+
+    public func delete(_ key: Key) throws { try db.write { try $0.execute(sql: "DELETE FROM kv WHERE key = ?", arguments: [key.rawValue]) } }
 
     public func profile() throws -> Profile { try get(.profile) ?? Profile() }
     public func search() throws -> SearchConfig { try get(.search) ?? SearchConfig() }
@@ -237,14 +292,21 @@ public final class Store: @unchecked Sendable {
     /// Settings → Delete all my data.
     public func eraseEverything() throws {
         try db.write { db in
-            for t in ["job", "event", "kv", "resume_version", "account", "email_seen", "usage"] { try db.execute(sql: "DELETE FROM \(t)") }
+            for t in ["job", "event", "kv", "resume_version", "account", "email_seen", "usage", "llm_cache"] { try db.execute(sql: "DELETE FROM \(t)") }
         }
     }
 }
 
 public enum StoreError: LocalizedError {
-    case missingJob(String)
+    case missingJob(String), outdated, changed, keyMissing, keyUnavailable, encryptionFailed
     public var errorDescription: String? {
-        switch self { case .missingJob(let id): "That role (\(id)) no longer exists." }
+        switch self {
+        case .missingJob(let id): "That role (\(id)) no longer exists."
+        case .outdated: "Offerlane's data needs an update. Open Offerlane once, then try again."
+        case .changed: "That role changed while the draft was being saved (it may have been tailored meanwhile). Nothing was replaced."
+        case .keyMissing: "Offerlane's data is locked and its key is missing from your Mac's Keychain. To get it back, restore a backup: Settings → Your data → Restore from Backup…."
+        case .keyUnavailable: "Offerlane couldn't read its key from your Mac's Keychain. Unlock your Mac and allow access when macOS asks, then try again. Nothing was changed."
+        case .encryptionFailed: "Offerlane couldn't secure your data, so nothing was changed and your data is safe. Restart Offerlane to try again; if it keeps happening, use Help → Send Diagnostics."
+        }
     }
 }

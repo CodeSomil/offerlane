@@ -1,0 +1,11 @@
+# Cloud workspace (P2). libs/ not packages/: macOS ignores case, and Packages/ is the Swift folder.
+packages:
+  - apps/*
+  - libs/*
+# Supply-chain guard: never install a version published less than 14 days ago (minutes).
+minimumReleaseAge: 20160
+# No install scripts run. esbuild's is only a binary self-check; its platform binary comes from an optional dependency.
+allowBuilds:
+  esbuild: false
+  # protobufjs's postinstall only checks its own version; the OTel exporters work without it.
+  protobufjs: false

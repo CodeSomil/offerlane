@@ -1,0 +1,68 @@
+# Preview environment (P2.9): db + migrate + api + worker, built from the Dockerfile. Written, not deployed yet (H3 hosting).
+#   POSTGRES_PASSWORD=<hex> APP_DB_PASSWORD=<hex> OIDC_ISSUER=https://… OIDC_AUDIENCE=… docker compose -f compose.preview.yml up -d --wait
+# Locally, without a real OIDC provider, add the dev issuer overlay: -f compose.dev.yml (see scripts/load_test.sh).
+# Both passwords go into URLs: use letters and digits only (e.g. `openssl rand -hex 24`).
+# Least privilege (ops/db_roles.sh): only `migrate` connects as the schema owner; api + worker are offerlane_app (rows only).
+name: offerlane-preview
+
+x-hardened: &hardened
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  restart: unless-stopped
+  environment: &env
+    DATABASE_URL: postgres://offerlane_app:${APP_DB_PASSWORD:?set APP_DB_PASSWORD}@db:5432/offerlane
+    SENTRY_DSN: ${SENTRY_DSN:-}
+    OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: offerlane
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?set APP_DB_PASSWORD}
+    # db_roles.sh runs once, when the volume is new (after a restore, rerun it by hand: RUNBOOK §2).
+    volumes: [dbdata:/var/lib/postgresql/data, ./ops/db_roles.sh:/docker-entrypoint-initdb.d/10-roles.sh:ro]
+    # No published port: only the services on this network reach the database.
+    healthcheck: { test: ["CMD", "pg_isready", "-U", "postgres"], interval: 2s, retries: 30 }
+    restart: unless-stopped
+
+  migrate:
+    <<: *hardened
+    build: { context: ., target: migrate }
+    restart: "no"
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/offerlane
+    depends_on: { db: { condition: service_healthy } }
+
+  api:
+    <<: *hardened
+    build: { context: ., target: api }
+    environment:
+      <<: *env
+      OIDC_ISSUER: ${OIDC_ISSUER:?set OIDC_ISSUER}
+      OIDC_AUDIENCE: ${OIDC_AUDIENCE:?set OIDC_AUDIENCE}
+      WEB_ORIGINS: ${WEB_ORIGINS:-}  # the web app's origin(s), comma separated; empty = no browser access
+    ports: ["127.0.0.1:${API_PORT:-8787}:8787"]
+    # The H4 load-test instance size: 1 vCPU / 1 GB.
+    cpus: 1
+    mem_limit: 1g
+    depends_on: { migrate: { condition: service_completed_successfully } }
+    # /readyz: the DB answers and the newest migration is applied (the image has no curl; Node's fetch does it).
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/readyz').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  worker:
+    <<: *hardened
+    build: { context: ., target: worker }
+    cpus: 1
+    mem_limit: 512m
+    depends_on: { migrate: { condition: service_completed_successfully } }
+
+volumes:
+  dbdata:

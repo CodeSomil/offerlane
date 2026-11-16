@@ -10,7 +10,7 @@ struct FieldRow: View {
     var secure = false
     var body: some View {
         GridRow(alignment: .firstTextBaseline) {
-            Text(label).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
+            Text(label).foregroundStyle(DS.Palette.textSecondary).multilineTextAlignment(.trailing)
                 .frame(width: 190, alignment: .trailing).gridColumnAlignment(.trailing)
             VStack(alignment: .leading, spacing: 3) {
                 Group {
@@ -18,7 +18,7 @@ struct FieldRow: View {
                 }
                 .textFieldStyle(.roundedBorder)
                 .accessibilityLabel(label)
-                if let error { Text(error).font(.caption).foregroundStyle(.red) }
+                if let error { Text(error).font(.caption).foregroundStyle(DS.Palette.danger) }
             }
         }
     }

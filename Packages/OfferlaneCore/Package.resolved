@@ -1,15 +1,6 @@
 {
-  "originHash" : "448fd3dfaeeb47c6277cfb9d5abb6c00032b6e7522d43e0e6eb62f664930ccf6",
+  "originHash" : "99fac32c53377e656a9acc537bf3be6c21e1de8f67ae5a62bc05aaeb5e72b906",
   "pins" : [
-    {
-      "identity" : "grdb.swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/groue/GRDB.swift.git",
-      "state" : {
-        "revision" : "b83108d10f42680d78f23fe4d4d80fc88dab3212",
-        "version" : "7.11.1"
-      }
-    },
     {
       "identity" : "h",
       "kind" : "remoteSourceControl",
@@ -17,6 +8,24 @@
       "state" : {
         "revision" : "aa3626829160917d4378330617971977cbd78f5b",
         "version" : "1.0.1"
+      }
+    },
+    {
+      "identity" : "sparkle",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sparkle-project/Sparkle",
+      "state" : {
+        "revision" : "ab7d71291238df6e0492143b120c9b696a35f603",
+        "version" : "2.10.1"
+      }
+    },
+    {
+      "identity" : "sqlcipher.swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sqlcipher/SQLCipher.swift.git",
+      "state" : {
+        "revision" : "e7415c5e6b4fd9b78874bb956aad8a42b08e9966",
+        "version" : "4.20.0"
       }
     },
     {
@@ -42,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/migueldeicaza/SwiftTerm",
       "state" : {
-        "revision" : "a183c15b52858530a17de57dcc72b93eeebc9857",
-        "version" : "1.99.2"
+        "revision" : "282c3c3a932b55c129628876b70f37d993af1615",
+        "version" : "1.99.3"
       }
     },
     {

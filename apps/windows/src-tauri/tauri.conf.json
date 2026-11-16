@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Offerlane",
+  "version": "0.1.0",
+  "identifier": "com.somilmanke.offerlane",
+  "build": {
+    "frontendDist": "../dist",
+    "beforeBuildCommand": "npx -y pnpm@11.28.9 build"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src ipc: http://ipc.localhost http://localhost:8787 http://localhost:9000 https://openrouter.ai https://api.anthropic.com; object-src 'none'; base-uri 'none'; form-action 'none'",
+      "devCsp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "icon": [
+      "icons/icon.ico",
+      "icons/128x128.png"
+    ],
+    "publisher": "Offerlane",
+    "shortDescription": "Offerlane",
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      },
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
+    }
+  }
+}

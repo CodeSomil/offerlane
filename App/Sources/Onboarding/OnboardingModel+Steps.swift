@@ -7,21 +7,36 @@ extension OnboardingModel {
 
     var legacyFolderAvailable: Bool { LegacyImporter.looksValid(LegacyImporter.defaultFolder) }
 
-    func importLegacy(from dir: URL = LegacyImporter.defaultFolder) {
-        guard let app else { return }
+    /// `onDone` runs once the import has ended (or was refused because one is already running).
+    func importLegacy(from dir: URL = LegacyImporter.defaultFolder, onDone: @escaping () -> Void = {}) {
+        guard let app, !importing else { onDone(); return }
         importing = true; importError = nil; importReport = nil
+        // The import can't be cancelled midway, so a stuck one keeps running; the user still gets told and can quit.
+        let timeout = Double(TestHooks.env["OFFERLANE_IMPORT_TIMEOUT"] ?? "") ?? 60
+        let watchdog = Task { [weak self] in
+            guard (try? await Task.sleep(for: .seconds(timeout))) != nil, let self, self.importing else { return }
+            self.importError = "The import hasn't finished after \(Int(timeout)) seconds, so something is blocking it. "
+                + "It will still finish if it can. If nothing changes, quit and reopen Offerlane, then try again."
+        }
         Task {
             do {
-                let rep = try await Task.detached { try LegacyImporter(store: app.store).run(from: dir) }.value
-                importReport = rep.description
+                let store = app.store
+                let stall = Double(TestHooks.env["OFFERLANE_IMPORT_STALL"] ?? "") ?? 0   // UI tests: a slow import
+                let rep = try await Task.detached {
+                    if stall > 0 { try await Task.sleep(for: .seconds(stall)) }
+                    return try LegacyImporter(store: store).run(from: dir)
+                }.value
+                importReport = rep.description; importError = nil   // a late finish clears the timeout message
                 uploads = ((try? app.store.resumeVersions()) ?? []).map(ResumeUpload.init(existing:))
                 profile = (try? app.store.profile()) ?? profile
                 search = (try? app.store.search()) ?? search; drafted = !search.companies.isEmpty
                 let s = (try? app.store.settings()) ?? app.settings
                 email = s.email; notify = s.notify
                 app.settings.email = s.email; app.settings.notify = s.notify
-            } catch { importError = error.localizedDescription }
+            } catch { importError = error.plainMessage }
+            watchdog.cancel()
             importing = false
+            onDone()
         }
     }
 
@@ -42,7 +57,7 @@ extension OnboardingModel {
             do {
                 search = try await SearchSetup(ai: ai).draft(base, resume: r.content, versions: versions, profile: profile)
                 drafted = true
-            } catch is CancellationError {} catch { draftError = error.localizedDescription }
+            } catch is CancellationError {} catch { draftError = error.plainMessage }
             drafting = false
         }
     }
@@ -72,12 +87,12 @@ extension OnboardingModel {
 
     func testEmail() {
         emailTesting = true; emailError = nil; emailResult = nil
-        let host = email.host, port = UInt16(email.port), user = email.user, pw = emailPassword.replacingOccurrences(of: " ", with: "")
+        let host = email.host, port = UInt16(clamping: email.port), user = email.user, pw = emailPassword.replacingOccurrences(of: " ", with: "")
         Task {
             do {
                 let n = try await IMAPClient.test(host: host, port: port, user: user, password: pw)
                 emailResult = "Connected · \(n.formatted()) messages in your inbox."
-            } catch { emailError = error.localizedDescription }
+            } catch { emailError = error.plainMessage }
             emailTesting = false
         }
     }
@@ -97,7 +112,7 @@ extension OnboardingModel {
             do {
                 let ok = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
                 notificationStatus = ok ? "Notifications are on." : "Notifications are off. You can turn them on in System Settings → Notifications → Offerlane."
-            } catch { notificationStatus = "Couldn't ask for permission: \(error.localizedDescription)" }
+            } catch { Log.error("notifications: \(error)"); notificationStatus = "Notifications are off. You can turn them on in System Settings → Notifications → Offerlane." }
         }
     }
 
@@ -117,7 +132,7 @@ extension OnboardingModel {
         let topic = notify.ntfyTopic
         Task {
             do { try await Ntfy.send(topic: topic, title: "Offerlane", message: "Phone notifications are working."); ntfyTestResult = "Sent. Check your phone." }
-            catch { ntfyTestResult = error.localizedDescription }
+            catch { ntfyTestResult = "The test didn't reach your phone. Check your internet connection and the topic name, then send another test." }
         }
     }
 }

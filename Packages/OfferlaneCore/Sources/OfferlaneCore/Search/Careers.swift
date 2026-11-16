@@ -25,6 +25,11 @@ public enum Careers {
         return .init(name: named(slug), slug: slug.lowercased(), ats: ats)
     }
 
+    /// The first link to a known ATS board in `text` (e.g. an "apply here" link inside an aggregator's description).
+    public static func boardLink(in text: String) -> String? {
+        Re.first("https?://[^\\s\"'<>]*(?:greenhouse\\.io|lever\\.co|ashbyhq\\.com|workable\\.com|smartrecruiters\\.com|myworkdayjobs\\.com)[^\\s\"'<>]*", text)
+    }
+
     /// Verified public Workday career sites, bundled with the app.
     public static let workdayTenants: [String: String] = {
         guard let url = Bundle.module.url(forResource: "Resources/workday_tenants", withExtension: "json"),

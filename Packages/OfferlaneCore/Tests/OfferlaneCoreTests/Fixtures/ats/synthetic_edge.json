@@ -1,0 +1,20 @@
+{
+  "_note": "Hand-written edge cases (not a recorded response). Both ports must agree on them; see AdapterGoldenTests.swift.",
+  "greenhouse": {"jobs": [
+    {"title": 1234, "updated_at": 1792792277, "absolute_url": "https://x.example/1", "location": {"name": 12.5},
+     "content": "&amp;lt;b&amp;gt;Hi&amp;lt;/b&amp;gt; &#169; &#x1F600; &#55357; &#99999999999; &amp;amp;"},
+    {"title": "a﻿b", "location": {"name": "\u0085 Berlin\u000b  "}, "content": "\u0085 a\u000bb   c﻿", "absolute_url": true}
+  ]},
+  "lever": [
+    {"text": "t", "createdAt": "1792792277203", "descriptionPlain": "line\n ", "lists": [{"content": "<li>x</li>"}, {"content": 7}]},
+    {"text": "u", "createdAt": 1792792277, "descriptionPlain": "  hi\t", "categories": {"location": null}}
+  ],
+  "ashby": {"jobs": [{"title": "listed", "isListed": true, "isRemote": "yes", "descriptionHtml": "<p>x</p>"}, {"title": "hidden", "isListed": false}, {"title": "nolisted", "isRemote": true, "descriptionPlain": "plain"}]},
+  "smartrecruiters": {"content": [{"id": 98765, "name": "n", "location": {"remote": true, "city": "", "country": "de"}}]},
+  "workday": {"jobPostings": [
+    {"externalPath": "/job/a", "postedOn": "Posted 30+ Days Ago"}, {"externalPath": "/job/b", "postedOn": "Posted Today"},
+    {"externalPath": "/job/c", "postedOn": "Posted 3 Days Ago"}, {"externalPath": "", "postedOn": "x"}, {"externalPath": "/job/d", "postedOn": "soon"},
+    {"externalPath": 5}
+  ]},
+  "strip": ["<<<a>", "<>x<", "a < b > c", " <p>a</p>\n\t<p>b</p> ", "<áb>c", "x<y", "<<>>", "&lt;i&gt;tag&lt;/i&gt;"]
+}
