@@ -26,7 +26,7 @@ public struct SyncState: Codable, Equatable, Sendable {
 }
 
 /// This device's data per sync kind, as the same JSON the web stores (Foundation JSON values: dictionaries, arrays, …).
-public protocol SyncLocal: AnyObject {
+public protocol SyncLocal: AnyObject, Sendable {
     func read(_ kind: String) throws -> Any?
     /// Applies `change` to the current value and returns what is stored afterwards (read back, so a push sends what this device really holds).
     func update(_ kind: String, _ change: (Any?) -> Any?) throws -> Any?
@@ -42,7 +42,7 @@ public protocol SyncKeyStore: Sendable {
 }
 
 /// Sync on the Mac: a port of apps/web/src/sync.ts (same rules, same blobs), so Mac, web and Windows open each other's data.
-public struct SyncEngine {
+public struct SyncEngine: Sendable {
     public let remote: any SyncRemote, local: any SyncLocal, keys: any SyncKeyStore
     public init(remote: any SyncRemote, local: any SyncLocal, keys: any SyncKeyStore) { self.remote = remote; self.local = local; self.keys = keys }
 

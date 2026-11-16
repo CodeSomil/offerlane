@@ -22,6 +22,7 @@ struct SettingsView: View {
                 if app.account != nil { accountSection }
                 ai
                 ClaudeSection()
+                SyncSection()
                 profileAndSearch
                 SectionCard(title: "Email tracking", subtitle: "Reads replies from employers and updates each application.", symbol: "envelope") {
                     VStack(alignment: .leading, spacing: 10) {

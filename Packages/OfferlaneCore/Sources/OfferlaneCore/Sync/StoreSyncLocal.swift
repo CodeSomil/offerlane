@@ -7,7 +7,7 @@ import Foundation
 /// - `applications`: `{ <job id>: { job, status, score, created, updated, plan?, answers? } }` (web jobs.ts `Saved`), for every
 ///   job the user acted on (status ≠ found) plus every id that came from sync. Times on the wire are UTC ISO; the Mac keeps local time.
 ///   Mac-only job fields (notes, folder, events, …) stay here; a pull only updates the fields the web has.
-public final class StoreSyncLocal: SyncLocal {
+public final class StoreSyncLocal: SyncLocal, @unchecked Sendable {  // only a `let` Store, itself thread-safe (GRDB)
     let store: Store
     public init(store: Store) { self.store = store }
 

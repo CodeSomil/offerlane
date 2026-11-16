@@ -97,4 +97,17 @@ final class SettingsTests: XCTestCase {
         XCTAssertFalse(app.textFields["adzuna.appId"].exists, "clearing the key switched Adzuna off")
         app.terminate()
     }
+
+    /// v4 P4.4: signed out, Sync offers only sign-in and says the data is encrypted before it leaves.
+    func testSyncSectionSignedOut() throws {
+        let app = launch(home: NSTemporaryDirectory() + "offerlane-ui-" + UUID().uuidString)
+        app.outlines.staticTexts["Settings"].click()
+        let signIn = app.buttons["sync.signIn"]
+        XCTAssertTrue(signIn.waitForExistence(timeout: 10), "Sync is in Settings")
+        let says = { (t: String) in app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", t, t)).firstMatch.exists }
+        XCTAssertTrue(says("servers can't read it"), "it says the data is encrypted before it leaves")
+        XCTAssertFalse(app.buttons["sync.now"].exists, "nothing syncs before sign-in")
+        XCTAssertFalse(app.buttons["sync.create"].exists)
+        app.terminate()
+    }
 }

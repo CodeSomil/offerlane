@@ -68,7 +68,7 @@
 		A638B8CA3272AB5E256634A7 /* OfferlaneCore in Frameworks */ = {isa = PBXBuildFile; productRef = E6072AD916618829B5B7A506 /* OfferlaneCore */; };
 		A96BF1B4BAB524F9817F20B6 /* SetupCenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 457F917F2E46BDAD3B400FF5 /* SetupCenterTests.swift */; };
 		ADC1B060676B4834C1FF5AE2 /* MeasuredContrast.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCEA8A3BE1C5C7BC6EE7C391 /* MeasuredContrast.swift */; };
-		B349EEEA8BBE7573DA6F032D /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = CF334F34989DFB4BACFEC1B4 /* SwiftTerm */; };
+		B349EEEA8BBE7573DA6F032D /* OfferlaneAPI in Frameworks */ = {isa = PBXBuildFile; productRef = EFFFC26CB8CB1BEB5088B5C9 /* OfferlaneAPI */; };
 		BF6F35E593E1D21BADA7744F /* ResumesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8611481002FE358477840857 /* ResumesView.swift */; };
 		C17F748CEF9E01679EE69202 /* WebPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = E233DD56649F6A16A785DEEF /* WebPage.swift */; };
 		C2C6995A3D3A609795440933 /* ConnectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C34937DB0BA3888C2BB38F2 /* ConnectionsView.swift */; };
@@ -79,11 +79,13 @@
 		CC510BDDAC770E09A7B9D3FB /* HelpTourTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A946A58D5E9D8234129D3A26 /* HelpTourTests.swift */; };
 		CDADFC820CB885E346994A59 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADB9D8A916084401315D5A14 /* HomeView.swift */; };
 		CFCF2490D774F7F59DAC0DA0 /* CommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8273EB7CD455BDAEFA4AFB2F /* CommandPalette.swift */; };
-		D2A85AC4044D59C9C3D957AC /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = C3712A66BB5965D50B82FB14 /* Sparkle */; };
+		D2A85AC4044D59C9C3D957AC /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = CF334F34989DFB4BACFEC1B4 /* SwiftTerm */; };
+		D34FDEAB21A73E815136592B /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = C3712A66BB5965D50B82FB14 /* Sparkle */; };
 		D381887D1E6AF11FF708BFA6 /* HomeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A981D345B57BED1C789A465 /* HomeTests.swift */; };
 		D80979B80E5C66D272D9247C /* ApplyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5ABE56D482DD32CAD0E7DF3 /* ApplyController.swift */; };
 		DFFF684096CC82A532A271CB /* AuthViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B8CEEC5A31CBFE6FAE6439 /* AuthViews.swift */; };
 		E3390D680F961A2AA88CCB0C /* GoalsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B9E62311DDB63736A7CE21 /* GoalsTests.swift */; };
+		E45FEB9E2B042C90895BA619 /* SyncSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0ED538035703E7F713E247 /* SyncSection.swift */; };
 		E63E8FF946418EC25964B6B8 /* CompanyBriefView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4A71668704A1B435C54627 /* CompanyBriefView.swift */; };
 		EB8DCECAC9BB153476642945 /* ContactsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B37052B9C4C31FC78460D842 /* ContactsView.swift */; };
 		F072F2EDC8F5D1F283932FE4 /* ScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C9A1D61DC86CFA5DE011843 /* ScreenshotTests.swift */; };
@@ -163,6 +165,7 @@
 		5AD9758EA3E7B7E4D80116F6 /* SkillsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillsTests.swift; sourceTree = "<group>"; };
 		6B6715ECDC5952F8B943850F /* Manager.tex */ = {isa = PBXFileReference; path = Manager.tex; sourceTree = "<group>"; };
 		6BFD14D7ED8A81D64F287C6B /* InsightsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsTests.swift; sourceTree = "<group>"; };
+		6C24E630FC6EEABAC889EEEB /* OfferlaneAPI */ = {isa = PBXFileReference; lastKnownFileType = folder; name = OfferlaneAPI; path = Packages/OfferlaneAPI; sourceTree = SOURCE_ROOT; };
 		6D918E85B348EBCDD9841FB7 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		7097314CBC6569F3E2A02305 /* ShellTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellTests.swift; sourceTree = "<group>"; };
 		76BCB50480AD44784DDE353D /* DiagnosticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsView.swift; sourceTree = "<group>"; };
@@ -213,6 +216,7 @@
 		F65739098014C297E4EC2A1F /* autofill.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = autofill.js; sourceTree = "<group>"; };
 		FC791D3C0F265CA0C95F8B40 /* ClaudeSignInSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeSignInSheet.swift; sourceTree = "<group>"; };
 		FCE58F9D643F5AEE1C6837D1 /* SkillsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillsView.swift; sourceTree = "<group>"; };
+		FE0ED538035703E7F713E247 /* SyncSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSection.swift; sourceTree = "<group>"; };
 		FF26DDBD700A813C7B9D452E /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -222,8 +226,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				A638B8CA3272AB5E256634A7 /* OfferlaneCore in Frameworks */,
-				B349EEEA8BBE7573DA6F032D /* SwiftTerm in Frameworks */,
-				D2A85AC4044D59C9C3D957AC /* Sparkle in Frameworks */,
+				B349EEEA8BBE7573DA6F032D /* OfferlaneAPI in Frameworks */,
+				D2A85AC4044D59C9C3D957AC /* SwiftTerm in Frameworks */,
+				D34FDEAB21A73E815136592B /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -249,6 +254,7 @@
 		06C4143264E2AD28384D558D /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				6C24E630FC6EEABAC889EEEB /* OfferlaneAPI */,
 				EF112D14860AA6BCC9F4ACEC /* OfferlaneCore */,
 				70D5B729B05FA9C267EF8060 /* OfferlaneCore */,
 			);
@@ -307,6 +313,7 @@
 				AB125EEAD0D597A0FBABA786 /* ReviewView.swift */,
 				FF26DDBD700A813C7B9D452E /* SettingsView.swift */,
 				FCE58F9D643F5AEE1C6837D1 /* SkillsView.swift */,
+				FE0ED538035703E7F713E247 /* SyncSection.swift */,
 				12B0AA21B2EC0B5FDE933550 /* Updater.swift */,
 			);
 			path = Main;
@@ -506,6 +513,7 @@
 			name = Offerlane;
 			packageProductDependencies = (
 				E6072AD916618829B5B7A506 /* OfferlaneCore */,
+				EFFFC26CB8CB1BEB5088B5C9 /* OfferlaneAPI */,
 				CF334F34989DFB4BACFEC1B4 /* SwiftTerm */,
 				C3712A66BB5965D50B82FB14 /* Sparkle */,
 			);
@@ -568,6 +576,7 @@
 			packageReferences = (
 				36D91419BDA01C88207A4B08 /* XCRemoteSwiftPackageReference "Sparkle" */,
 				EEE98AE8EB8542CB4A43EDDF /* XCRemoteSwiftPackageReference "SwiftTerm" */,
+				2F1FE4C66477723482C42954 /* XCLocalSwiftPackageReference "Packages/OfferlaneAPI" */,
 				261FBC5D7E85B9B745A9A28C /* XCLocalSwiftPackageReference "Packages/OfferlaneCore" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -710,6 +719,7 @@
 				25013314D5D64C0EB166D341 /* SettingsView.swift in Sources */,
 				03D3D177A7DDD7FD530D4B28 /* SetupCenterView.swift in Sources */,
 				4401769D643EFC7F59B76E8C /* SkillsView.swift in Sources */,
+				E45FEB9E2B042C90895BA619 /* SyncSection.swift in Sources */,
 				21A4EDCAF4FE9DEA0C447246 /* Tokens.swift in Sources */,
 				0031864DC1CFAD5BCBDCB850 /* TourView.swift in Sources */,
 				C4CEA36EFA909383FDA6EC31 /* Updater.swift in Sources */,
@@ -1027,6 +1037,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/OfferlaneCore;
 		};
+		2F1FE4C66477723482C42954 /* XCLocalSwiftPackageReference "Packages/OfferlaneAPI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/OfferlaneAPI;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -1066,6 +1080,10 @@
 		E6072AD916618829B5B7A506 /* OfferlaneCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = OfferlaneCore;
+		};
+		EFFFC26CB8CB1BEB5088B5C9 /* OfferlaneAPI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OfferlaneAPI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

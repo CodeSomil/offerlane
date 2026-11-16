@@ -20,7 +20,7 @@ final class FakeSyncServer: SyncRemote, @unchecked Sendable {
         return .ok(version: v)
     }
 }
-final class MemoryLocal: SyncLocal {
+final class MemoryLocal: SyncLocal, @unchecked Sendable {
     var values: [String: Any] = [:], backups: [String: Any] = [:], state: SyncState?
     func read(_ kind: String) throws -> Any? { values[kind] }
     func update(_ kind: String, _ change: (Any?) -> Any?) throws -> Any? { values[kind] = change(values[kind]); return values[kind] }
