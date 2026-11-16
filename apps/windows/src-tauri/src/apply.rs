@@ -12,8 +12,11 @@ use crate::nav;
 static NEXT: AtomicU32 = AtomicU32::new(1);
 const PREFIX: &str = "apply-";
 
+/// Commands come only from the main window while it shows Offerlane's own page (never the sign-in pages or anything
+/// else that window may hold), on top of Tauri's own rule that remote origins get no IPC.
 pub fn main_only(w: &Webview) -> Result<(), String> {
-    if w.label() == "main" { Ok(()) } else { Err("not allowed from this window".into()) }
+    let home = w.url().map(|u| crate::nav::is_app(&u)).unwrap_or(false);
+    if w.label() == "main" && home { Ok(()) } else { Err("not allowed from this window".into()) }
 }
 
 /// A named profile ("default", "work") keeps its cookies in its own folder; None is a fresh folder, removed on close

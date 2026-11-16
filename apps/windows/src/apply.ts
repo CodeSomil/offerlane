@@ -4,7 +4,9 @@ import { ApplyEngine, cdpPage, type Answer, type ApplyPage, type Job, type Outco
 import { cdpBridge, CredentialVault, type Approvals, type Invoke, type Listen, type ShellPage } from "./bridge.js";
 
 /** `browserProfile`: the apply window's cookie folder ("default" keeps career-site sign-ins; undefined = throwaway, for tests). */
-export function shellFill(invoke: Invoke, listen: Listen, approvals: Approvals, autofill: string, browserProfile: string | undefined = "default") {
+/** `loaded`: the self-test's hook to watch the page before the engine starts. */
+export function shellFill(invoke: Invoke, listen: Listen, approvals: Approvals, autofill: string, browserProfile: string | undefined = "default",
+  loaded?: (page: ApplyPage) => Promise<void>) {
   const bridge = cdpBridge(invoke, listen);
   let current: ShellPage | undefined, page: ApplyPage | undefined;
   async function fill(job: Job, profile: Profile, answers: Answer[], approve: boolean): Promise<Outcome> {
@@ -16,6 +18,7 @@ export function shellFill(invoke: Invoke, listen: Listen, approvals: Approvals, 
     const vault = new CredentialVault(invoke, approvals);
     await page.load(url);
     if (approve) await vault.approve(await page.host(), job.company);
+    await loaded?.(page);
     // SHORTCUT: no resume PDF (the web has no typeset PDF yet); the human attaches it, and the UI says so.
     return new ApplyEngine({ page, job, profile, answers, pdf: null, vault }).run(true);
   }

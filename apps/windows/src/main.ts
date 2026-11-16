@@ -31,7 +31,7 @@ async function selftest(base: string) {
     await current?.close(); current = await bridge.open();
     const shell = await shellChecks(current, base);
     await current.close(); current = undefined;
-    const fills = [await noSubmit(base)];
+    const fills = [await noSubmit(base), await keyHome()];
     for (const c of [rt, ...shell, ...fills]) log((c.ok ? "PASS " : "FAIL ") + c.what);
     const all = [...results, rt, ...shell, ...fills];
     total = results.length === 14 ? all.length : 0; // a short list is a failure, not a pass
@@ -50,17 +50,38 @@ async function selftest(base: string) {
 /** Check 19: the app's own "Fill in application" path (platform.fill) fills the form and leaves Submit to the human. */
 async function noSubmit(base: string) {
   const what = "Fill in application (the app's button) fills the form and never submits";
-  const f = shellFill(invoke, listen, memoryApprovals(), autofill, undefined);
+  // Any submit attempt counts: a Submit click, the submit event, browser validation stopping one, or a script submit.
+  const trap = `window.__tries = 0; const t = () => { window.__tries++; };
+    document.addEventListener("click", (e) => { if (e.target instanceof Element && e.target.closest("button[type=submit],input[type=submit],button:not([type])")) t(); }, true);
+    for (const ev of ["submit", "invalid"]) document.addEventListener(ev, t, true);
+    HTMLFormElement.prototype.submit = t; HTMLFormElement.prototype.requestSubmit = t; null`;
+  const f = shellFill(invoke, listen, memoryApprovals(), autofill, undefined, async (pg) => { await pg.eval(trap); });
   try {
     const me = newProfile();
     Object.assign(me.personal, { first_name: "Test", last_name: "Person", full_name: "Test Person", email: "test@example.com" });
     const r = await f.fill(job({ company: "Globex", title: "Data Scientist", location: "", url: `${base}/simple.html` }), me, [], false);
     await new Promise((ok) => setTimeout(ok, 1500));  // a submit would replace the form with "Thank you for applying!"
-    const left = await f.page()!.eval("document.forms.length === 1 && fn.value === 'Test' && !document.body.innerText.includes('Thank you')");
+    const left = await f.page()!.eval("window.__tries === 0 && document.forms.length === 1 && fn.value === 'Test' && !document.body.innerText.includes('Thank you')");
     return { ok: r.kind === "prefilled" && left === true, what: `${what} (${r.message})` };
   } catch (e) {
     return { ok: false, what: `${what} (${e instanceof Error ? e.message : String(e)})` };
   } finally { await f.close().catch(() => {}); }
+}
+
+/** Check 20: the bundled apps/web really got the shell's platform module: a remembered AI key lands in Credential Manager. */
+async function keyHome() {
+  const what = "the app keeps a remembered AI key in Credential Manager, not IndexedDB";
+  const before = (await invoke("secret_read", { name: "ai" }).catch(() => null)) as string | null;  // a real key is put back
+  try {
+    const { rememberAI, loadAI, getItem } = await import("../../web/src/store.js");
+    const c = { provider: "openrouter" as const, key: `sk-or-selftest-${crypto.randomUUID()}`, smart: "a/b", fast: "a/c" };
+    await rememberAI(c);
+    const stored = await invoke("secret_read", { name: "ai" });
+    return { ok: stored === JSON.stringify(c) && (await getItem("ai")) === undefined && (await loadAI())?.key === c.key, what };
+  } catch { return { ok: false, what }; }
+  finally {
+    await (before === null ? invoke("secret_delete", { name: "ai" }) : invoke("secret_save", { name: "ai", value: before })).catch(() => log("FAIL could not restore the AI key entry"));
+  }
 }
 
 const base = (await invoke("selftest_base")) as string | null;

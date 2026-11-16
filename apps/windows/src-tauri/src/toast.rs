@@ -7,7 +7,7 @@ const MAX_BODY: usize = 300;
 
 /// XML text content: the page's strings must not become toast markup.
 pub fn esc(s: &str) -> String {
-    s.chars().filter(|c| !c.is_control()).map(|c| match c { '&' => "&amp;".into(), '<' => "&lt;".into(), '>' => "&gt;".into(), '"' => "&quot;".into(), '\'' => "&apos;".into(), c => c.to_string() }).collect()
+    s.chars().filter(|c| !c.is_control() && !matches!(c, '\u{FFFE}' | '\u{FFFF}')).map(|c| match c { '&' => "&amp;".into(), '<' => "&lt;".into(), '>' => "&gt;".into(), '"' => "&quot;".into(), '\'' => "&apos;".into(), c => c.to_string() }).collect()
 }
 
 pub fn xml(title: &str, body: &str) -> String {
@@ -48,7 +48,7 @@ mod tests {
     fn page_text_cannot_become_markup() {
         assert_eq!(xml("A & B", "<b>x</b> \"q\" 'a'"),
             "<toast><visual><binding template=\"ToastGeneric\"><text>A &amp; B</text><text>&lt;b&gt;x&lt;/b&gt; &quot;q&quot; &apos;a&apos;</text></binding></visual></toast>");
-        assert!(!xml("t", "a\u{0}b\nc").contains('\u{0}'));
+        assert!(!xml("t", "a\u{0}b\nc\u{FFFF}").contains(['\u{0}', '\u{FFFF}']));
         assert_eq!(xml(&"é".repeat(500), "").matches('é').count(), MAX_TITLE);
     }
 

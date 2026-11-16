@@ -148,6 +148,11 @@ fn main() {
             } else {
                 apply::clean_temp(app.handle());
                 tray(app)?;
+                // With a tray icon, closing the window hides it (an apply window may still be open); Quit ends the app.
+                if let Some(w) = app.get_webview_window("main") {
+                    let w2 = w.clone();
+                    w.on_window_event(move |e| if let tauri::WindowEvent::CloseRequested { api, .. } = e { api.prevent_close(); let _ = w2.hide(); });
+                }
             }
             Ok(())
         })

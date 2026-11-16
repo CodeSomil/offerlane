@@ -7,7 +7,9 @@ import { notify } from "./notify.js";
 import { platform } from "./platform.js";
 
 export const OUTGOING: readonly string[] = ["ready", "applying", "account", "needs_you", "prefilled"];
-const AFTER: Record<OutcomeKind, JobStatus> = { applied: "applied", prefilled: "prefilled", account: "account", needsYou: "needs_you" };
+// "applied" means the page text looked like a confirmation; only the human's "I've submitted it" records an application.
+const AFTER: Record<OutcomeKind, JobStatus> = { applied: "prefilled", prefilled: "prefilled", account: "account", needsYou: "needs_you" };
+let filling = false;  // one fill at a time, even if Review is left and opened again while the apply window works
 type Msg = { ok: boolean; text: string };
 
 /** Moves a role along `path`, skipping steps it's already at; returns the stored set after the last move. */
@@ -18,18 +20,21 @@ async function advance(s: Saved, path: string[]) {
 }
 
 export function Ready({ roles, profile, stored, say }: { roles: Saved[]; profile: Profile; stored: (all: Record<string, Saved>) => void; say: (m: Msg) => void }) {
-  const [busy, setBusy] = useState(false);
+  const [busyHere, setBusy] = useState(false);
+  const busy = busyHere || filling;
   const fill = platform.fill;
   const fail = (err: unknown) => say({ ok: false, text: err instanceof MoveError ? err.message : err instanceof Error ? err.message : "That didn't work. Try again." });
 
   async function submitted(s: Saved) {
     const who = `${s.job.title} at ${s.job.company}`;
+    setBusy(true);
     try { const all = await advance(s, canMove(s.status, "applied") ? ["applied"] : ["applying", "applied"]); if (all) stored(all); say({ ok: true, text: `Moved ${who} to Applied.` }); }
     catch (err) { fail(err); }
+    setBusy(false);
   }
   async function fillIn(s: Saved, approve: boolean) {
-    if (!fill) return;
-    setBusy(true); say({ ok: true, text: `Filling in ${s.job.title} at ${s.job.company}. Watch the apply window.` });
+    if (!fill || filling) return;
+    filling = true; setBusy(true); say({ ok: true, text: `Filling in ${s.job.title} at ${s.job.company}. Watch the apply window.` });
     try {
       const applying = await advance(s, ["applying"]);
       if (applying) stored(applying);
@@ -38,7 +43,7 @@ export function Ready({ roles, profile, stored, say }: { roles: Saved[]; profile
       say({ ok: r.kind !== "needsYou", text: r.message });
       notify(`${s.job.company}: ${r.kind === "prefilled" ? "ready for you to submit" : "needs you"}`, r.message);
     } catch (err) { fail(err); }
-    setBusy(false);
+    filling = false; setBusy(false);
   }
 
   return (

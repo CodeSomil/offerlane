@@ -32,7 +32,8 @@ pub fn save(host: &str, account: &Account) -> Result<(), String> {
 pub fn delete(host: &str) -> Result<(), String> { imp::delete(&target(host).ok_or("bad host")?) }
 
 /// Offerlane's own secrets under fixed names: "ai" is the remembered AI config (provider, key, models) as JSON.
-pub fn secret_target(name: &str) -> Option<String> { matches!(name, "ai").then(|| format!("Offerlane/secret/{name}")) }
+/// "unit-test" exists only in test builds, so the round-trip test never touches the user's real key.
+pub fn secret_target(name: &str) -> Option<String> { (name == "ai" || (cfg!(test) && name == "unit-test")).then(|| format!("Offerlane/secret/{name}")) }
 /// CRED_MAX_CREDENTIAL_BLOB_SIZE (5 * 512 bytes).
 const MAX_SECRET: usize = 2560;
 
@@ -144,12 +145,11 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn secret_round_trip() {
-        // The real "ai" entry belongs to the user: keep what is there and put it back.
-        let before = secret_read("ai").unwrap();
-        secret_save("ai", r#"{"provider":"openrouter","key":"sk-or-Ä"}"#).unwrap();
-        assert_eq!(secret_read("ai").unwrap().as_deref(), Some(r#"{"provider":"openrouter","key":"sk-or-Ä"}"#));
-        secret_delete("ai").unwrap();
-        assert_eq!(secret_read("ai").unwrap(), None);
-        if let Some(v) = before { secret_save("ai", &v).unwrap(); }
+        let v = r#"{"provider":"openrouter","key":"sk-or-Ä"}"#;
+        secret_delete("unit-test").unwrap();
+        secret_save("unit-test", v).unwrap();
+        assert_eq!(secret_read("unit-test").unwrap().as_deref(), Some(v));
+        secret_delete("unit-test").unwrap();
+        assert_eq!(secret_read("unit-test").unwrap(), None);
     }
 }

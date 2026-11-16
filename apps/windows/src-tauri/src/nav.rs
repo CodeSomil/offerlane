@@ -16,8 +16,13 @@ pub const SIGN_IN: &[&str] = &["http://localhost:9000"];
 
 /// The main window holds the IPC, so it only shows Offerlane's own page (tauri.localhost on Windows) and the sign-in pages.
 pub fn main_allowed(url: &tauri::Url) -> bool {
-    let own = match url.scheme() { "http" | "https" => url.host_str() == Some("tauri.localhost"), "tauri" => url.host_str() == Some("localhost"), _ => false };
-    own || SIGN_IN.contains(&url.origin().ascii_serialization().as_str())
+    is_app(url) || SIGN_IN.contains(&url.origin().ascii_serialization().as_str())
+}
+
+/// Offerlane's own origin, including its blob: URLs (draft.ts downloads); a blob URL's origin is the page that made it.
+pub fn is_app(url: &tauri::Url) -> bool {
+    if url.scheme() == "tauri" { return url.host_str() == Some("localhost"); }
+    matches!(url.origin().ascii_serialization().as_str(), "http://tauri.localhost" | "https://tauri.localhost")
 }
 
 /// A link the main window opens (a job posting, "Get a key"): web pages go to the default browser, nothing else.
@@ -44,8 +49,8 @@ mod tests {
     #[test]
     fn main_window_stays_home() {
         let ok = |u: &str| main_allowed(&u.parse().unwrap());
-        for u in ["http://tauri.localhost/index.html", "https://tauri.localhost/#/find", "tauri://localhost/", "http://localhost:9000/authorize?x=1"] { assert!(ok(u), "{u}"); }
-        for u in ["https://jobs.example.com/", "http://localhost:9001/", "http://localhost:9000@evil.com/", "http://tauri.localhost.evil.com/", "file:///C:/x", "about:blank", "data:text/html,hi", "javascript:alert(1)"] { assert!(!ok(u), "{u}"); }
+        for u in ["http://tauri.localhost/index.html", "https://tauri.localhost/#/find", "tauri://localhost/", "http://localhost:9000/authorize?x=1", "blob:http://tauri.localhost/1-2"] { assert!(ok(u), "{u}"); }
+        for u in ["blob:https://evil.com/1", "https://jobs.example.com/", "http://localhost:9001/", "http://localhost:9000@evil.com/", "http://tauri.localhost.evil.com/", "file:///C:/x", "about:blank", "data:text/html,hi", "javascript:alert(1)"] { assert!(!ok(u), "{u}"); }
     }
 
     #[test]
