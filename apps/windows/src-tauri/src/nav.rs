@@ -10,9 +10,43 @@ pub fn allowed(url: &tauri::Url) -> bool {
     web && host != "localhost" && !host.ends_with(".localhost")
 }
 
+/// The sign-in provider the main window may visit (auth.ts sends the whole page there and back, code + PKCE).
+/// SHORTCUT: the dev issuer, apps/web/vite.config.ts's default; the real provider (P2 H2) changes both (test/shell.test.ts pins them).
+pub const SIGN_IN: &[&str] = &["http://localhost:9000"];
+
+/// The main window holds the IPC, so it only shows Offerlane's own page (tauri.localhost on Windows) and the sign-in pages.
+pub fn main_allowed(url: &tauri::Url) -> bool {
+    let own = match url.scheme() { "http" | "https" => url.host_str() == Some("tauri.localhost"), "tauri" => url.host_str() == Some("localhost"), _ => false };
+    own || SIGN_IN.contains(&url.origin().ascii_serialization().as_str())
+}
+
+/// A link the main window opens (a job posting, "Get a key"): web pages go to the default browser, nothing else.
+pub fn open_outside(url: &tauri::Url) {
+    if matches!(url.scheme(), "http" | "https") && allowed(url) { imp::open(url.as_str()) }
+}
+
+#[cfg(windows)]
+mod imp {
+    use windows::core::{w, HSTRING, PCWSTR};
+    use windows::Win32::UI::Shell::ShellExecuteW;
+    use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+    // SAFETY: every pointer is a live HSTRING or null; the scheme was checked to be http(s), so this only starts a browser.
+    pub fn open(url: &str) { unsafe { ShellExecuteW(None, w!("open"), &HSTRING::from(url), PCWSTR::null(), PCWSTR::null(), SW_SHOWNORMAL); } }
+}
+
+#[cfg(not(windows))]
+mod imp { pub fn open(_: &str) {} }
+
 #[cfg(test)]
 mod tests {
-    use super::allowed;
+    use super::{allowed, main_allowed};
+
+    #[test]
+    fn main_window_stays_home() {
+        let ok = |u: &str| main_allowed(&u.parse().unwrap());
+        for u in ["http://tauri.localhost/index.html", "https://tauri.localhost/#/find", "tauri://localhost/", "http://localhost:9000/authorize?x=1"] { assert!(ok(u), "{u}"); }
+        for u in ["https://jobs.example.com/", "http://localhost:9001/", "http://localhost:9000@evil.com/", "http://tauri.localhost.evil.com/", "file:///C:/x", "about:blank", "data:text/html,hi", "javascript:alert(1)"] { assert!(!ok(u), "{u}"); }
+    }
 
     #[test]
     fn same_list_as_the_mac() {

@@ -3,14 +3,23 @@
   "productName": "Offerlane",
   "version": "0.1.0",
   "identifier": "com.somilmanke.offerlane",
-  "build": { "frontendDist": "../dist", "beforeBuildCommand": "npx -y pnpm@11.28.9 build" },
+  "build": {
+    "frontendDist": "../dist",
+    "beforeBuildCommand": "npx -y pnpm@11.28.9 build"
+  },
   "app": {
     "withGlobalTauri": false,
-    "windows": [{ "label": "main", "title": "Offerlane", "width": 900, "height": 640 }],
+    "windows": [],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src ipc: http://ipc.localhost",
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src ipc: http://ipc.localhost http://localhost:8787 http://localhost:9000 https://openrouter.ai https://api.anthropic.com; object-src 'none'; base-uri 'none'; form-action 'none'",
       "devCsp": null
     }
   },
-  "bundle": { "active": false, "icon": ["icons/icon.ico", "icons/128x128.png"] }
+  "bundle": {
+    "active": false,
+    "icon": [
+      "icons/icon.ico",
+      "icons/128x128.png"
+    ]
+  }
 }

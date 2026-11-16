@@ -11,7 +11,7 @@ mod vault;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
-use tauri::{AppHandle, Webview};
+use tauri::{webview::NewWindowResponse, AppHandle, Webview, WebviewUrl, WebviewWindowBuilder};
 use vault::Account;
 
 struct SelfTest { base: Option<String> }
@@ -83,6 +83,13 @@ fn main() {
             apply::open_page, apply::close_page, apply::cdp_send
         ])
         .setup(move |app| {
+            WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
+                .title("Offerlane")
+                .inner_size(1100.0, 760.0)
+                .devtools(cfg!(debug_assertions))
+                .on_navigation(nav::main_allowed)
+                .on_new_window(|url, _| { nav::open_outside(&url); NewWindowResponse::Deny })
+                .build()?;
             if selftest {
                 // A hung page must not hang CI: fail after the limit.
                 let handle = app.handle().clone();
