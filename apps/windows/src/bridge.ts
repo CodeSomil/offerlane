@@ -1,6 +1,6 @@
 // The web side of the Tauri shell (v4 P4.2): CDPSend/CDPOn for libs/core/src/cdp.ts over the Rust commands in
 // src-tauri/src/apply.rs, and an ApplyVault over Credential Manager (src-tauri/src/vault.rs).
-import type { ApplyVault, CDPOn, CDPSend } from "@offerlane/core";
+import type { AIConfig, ApplyVault, CDPOn, CDPSend } from "@offerlane/core";
 
 export type Invoke = (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 export type Listen = (event: string, handler: (e: { payload: unknown }) => void) => Promise<unknown>;
@@ -34,25 +34,49 @@ export function cdpBridge(invoke: Invoke, listen: Listen) {
 
 type Account = { email: string; password: string } | null;
 
+/** Which company each career-site host's account was approved for (Vault.swift keeps this in the database). */
+export type Approvals = { get(host: string): Promise<string | undefined>; set(host: string, company: string): Promise<void> };
+export function memoryApprovals(): Approvals {
+  const m = new Map<string, string>();
+  return { get: async (h) => m.get(h), set: async (h, c) => { m.set(h, c); } };
+}
+
 /**
- * Passwords and sign-in emails per host in Credential Manager. SHORTCUT: company approval is in memory (the self-test
- * approves explicitly); P4.3 stores it with the app's other settings, as Vault.swift does.
+ * Passwords and sign-in emails per host in Credential Manager; the approved company per host in `approvals` (the app's
+ * settings in the shell, platform.ts). As Vault.swift: one company per host, matched case-insensitively, and saving the
+ * account the engine created counts as approval.
  */
 export class CredentialVault implements ApplyVault {
-  private readonly approvals = new Set<string>();
   private readonly saved = new Set<string>();
-  constructor(private readonly invoke: Invoke) {}
+  constructor(private readonly invoke: Invoke, private readonly approvals: Approvals = memoryApprovals()) {}
   private async account(host: string) { return (await this.invoke("vault_read", { host })) as Account; }
   async password(host: string) { return (await this.account(host))?.password ?? null; }
   async accountEmail(host: string) { return (await this.account(host))?.email ?? null; }
-  async save(host: string, _company: string, email: string, password: string) {
-    await this.invoke("vault_save", { host, email, password });
+  async save(host: string, company: string, email: string, password: string) {
+    await this.invoke("vault_save", { host, email, password });  // the password first, so it is never lost
     this.saved.add(host);
+    await this.approvals.set(host, company);
   }
-  async isApproved(host: string, company: string) { return this.approvals.has(`${host}\n${company}`); }
-  approve(host: string, company: string) { this.approvals.add(`${host}\n${company}`); }
+  async isApproved(host: string, company: string) { return (await this.approvals.get(host))?.toLowerCase() === company.toLowerCase(); }
+  async approve(host: string, company: string) { await this.approvals.set(host, company); }
   /** Self-test cleanup: deletes every entry this vault wrote. */
   async forgetSaved() { for (const h of this.saved) await this.invoke("vault_delete", { host: h }); this.saved.clear(); }
+}
+
+/** apps/web's "remember this key" in the shell: the AI config in Credential Manager (vault.rs secret "ai"), not IndexedDB. */
+export function credentialSecrets(invoke: Invoke) {
+  return {
+    save: async (c: AIConfig) => { await invoke("secret_save", { name: "ai", value: JSON.stringify(c) }); },
+    load: async (): Promise<AIConfig | undefined> => {
+      const raw = (await invoke("secret_read", { name: "ai" })) as string | null;
+      try {
+        const c = raw === null ? undefined : (JSON.parse(raw) as AIConfig);
+        const ok = c && (c.provider === "openrouter" || c.provider === "anthropic") && [c.key, c.smart, c.fast].every((v) => typeof v === "string");
+        return ok ? c : undefined;  // unreadable: ask for the key again
+      } catch { return undefined; }
+    },
+    forget: async () => { await invoke("secret_delete", { name: "ai" }); },
+  };
 }
 
 /** The spike's 15th check: a secret survives a save, reads back exactly, and is gone after delete. */

@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { cdpBridge, credentialRoundTrip, CredentialVault, shellChecks, type Invoke, type Listen } from "../src/bridge.js";
+import { cdpBridge, credentialRoundTrip, credentialSecrets, CredentialVault, memoryApprovals, shellChecks, type Invoke, type Listen } from "../src/bridge.js";
 
 function fakeShell() {
   const calls: [string, Record<string, unknown> | undefined][] = [];
   const store = new Map<string, { email: string; password: string }>();
+  const secrets = new Map<string, string>();
   let emit: ((e: { payload: unknown }) => void) | undefined;
   let n = 0;
   const invoke: Invoke = async (cmd, args) => {
@@ -15,11 +16,14 @@ function fakeShell() {
       case "vault_read": return store.get(host) ?? null;
       case "vault_save": store.set(host, { email: args?.email as string, password: args?.password as string }); return null;
       case "vault_delete": store.delete(host); return null;
+      case "secret_read": return secrets.get(args?.name as string) ?? null;
+      case "secret_save": secrets.set(args?.name as string, args?.value as string); return null;
+      case "secret_delete": secrets.delete(args?.name as string); return null;
       default: return null;
     }
   };
   const listen: Listen = async (_event, h) => { emit = h; return () => {}; };
-  return { calls, store, invoke, listen, emit: (payload: unknown) => emit?.({ payload }) };
+  return { calls, store, secrets, invoke, listen, emit: (payload: unknown) => emit?.({ payload }) };
 }
 
 describe("cdpBridge", () => {
@@ -55,19 +59,28 @@ describe("cdpBridge", () => {
 });
 
 describe("CredentialVault", () => {
-  it("reads and saves through the shell; approval is per host and company", async () => {
+  it("reads and saves through the shell; approval is per host and company, as Vault.swift", async () => {
     const s = fakeShell();
     const v = new CredentialVault(s.invoke);
     expect(await v.password("x.test")).toBeNull();
-    await v.save("x.test", "Acme", "me@example.com", "pw");
+    expect(await v.isApproved("y.test", "Acme")).toBe(false);
+    await v.approve("y.test", "Acme");
+    expect(await v.isApproved("y.test", "acme")).toBe(true);  // company matches case-insensitively
+    expect(await v.isApproved("y.test", "Globex")).toBe(false);
+    await v.approve("y.test", "Globex");                     // one company per host: the newer approval replaces it
+    expect(await v.isApproved("y.test", "Acme")).toBe(false);
+    await v.save("x.test", "Acme", "me@example.com", "pw");  // saving the account it created counts as approval
     expect(await v.password("x.test")).toBe("pw");
     expect(await v.accountEmail("x.test")).toBe("me@example.com");
-    expect(await v.isApproved("x.test", "Acme")).toBe(false);
-    v.approve("x.test", "Acme");
     expect(await v.isApproved("x.test", "Acme")).toBe(true);
-    expect(await v.isApproved("x.test", "Globex")).toBe(false);
     await v.forgetSaved();
     expect(s.store.size).toBe(0);
+  });
+
+  it("keeps approvals in the store it is given (the app's settings)", async () => {
+    const s = fakeShell(), kept = memoryApprovals();
+    await new CredentialVault(s.invoke, kept).approve("x.test", "Acme");
+    expect(await new CredentialVault(s.invoke, kept).isApproved("x.test", "Acme")).toBe(true);
   });
 
   it("a refused save rejects, so the engine hands over", async () => {
@@ -121,5 +134,27 @@ describe("shellChecks", () => {
   it("fails when the window follows a file:// or tauri.localhost link", async () => {
     const r = await shellChecks(fakePage({ ipc: "none", obeys: (u) => !u.startsWith("http://127") }), base, 0);
     expect(r.map((c) => c.ok)).toEqual([true, false, false]);
+  });
+});
+
+describe("credentialSecrets", () => {
+  it("keeps the AI config in Credential Manager under one fixed name", async () => {
+    const s = fakeShell(), sec = credentialSecrets(s.invoke);
+    expect(await sec.load()).toBeUndefined();
+    const cfg = { provider: "openrouter" as const, key: "sk-or-secret", smart: "a/b", fast: "a/c" };
+    await sec.save(cfg);
+    expect([...s.secrets.keys()]).toEqual(["ai"]);
+    expect(await sec.load()).toEqual(cfg);
+    await sec.forget();
+    expect(await sec.load()).toBeUndefined();
+    expect(s.calls.filter(([c]) => c.startsWith("secret_")).every(([, a]) => a?.name === "ai")).toBe(true);
+  });
+
+  it("treats an unreadable entry as no key", async () => {
+    const s = fakeShell();
+    s.secrets.set("ai", "{not json");
+    expect(await credentialSecrets(s.invoke).load()).toBeUndefined();
+    s.secrets.set("ai", JSON.stringify({ provider: "nope", key: 1 }));
+    expect(await credentialSecrets(s.invoke).load()).toBeUndefined();
   });
 });

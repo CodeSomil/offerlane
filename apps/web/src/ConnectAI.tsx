@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { ANTHROPIC_PICKS, KEY_FORMAT, OPENROUTER_BASE, OPENROUTER_PICKS, parseCatalog, priceText, type AIProvider, type CatalogModel, type Pick } from "@offerlane/core";
 import { ask, currentAI, readyAI, setCurrentAI } from "./ai.js";
 import { forgetAI, rememberAI } from "./store.js";
+import { platform } from "./platform.js";
+
+const shell = platform.name === "windows";
 
 const TIER = { recommended: "Recommended", cheaper: "Cheaper", advanced: "Advanced" } as const;
 const NAME: Record<AIProvider, string> = { openrouter: "OpenRouter", anthropic: "Anthropic API" };
@@ -47,7 +50,7 @@ export function ConnectAI() {
     // Storage is separate from the test call: the key works for this visit even when this browser blocks IndexedDB.
     let note = " Kept for this visit only.";
     try { if (remember) { await rememberAI(c); note = " Remembered on this device."; } else await forgetAI(); }
-    catch { note = remember ? " This browser wouldn't store it, so it's kept for this visit only." : " Kept for this visit, but a key remembered earlier couldn't be cleared from this browser."; }
+    catch { note = remember ? ` ${shell ? "Windows" : "This browser"} wouldn't store it, so it's kept for this visit only.` : ` Kept for this visit, but a key remembered earlier couldn't be cleared from ${shell ? "Windows Credential Manager" : "this browser"}.`; }
     setStatus({ ok: true, text: `Connected to ${NAME[provider]} (${smart}).${note}` });
     setBusy(false);
   }
@@ -55,12 +58,12 @@ export function ConnectAI() {
   async function forget() {
     setCurrentAI(undefined); setSaved(undefined);
     try { await forgetAI(); setStatus({ ok: true, text: "Key forgotten." }); }
-    catch { setStatus({ ok: false, text: "Forgotten for this visit, but this browser's storage couldn't be cleared." }); }
+    catch { setStatus({ ok: false, text: `Forgotten for this visit, but ${shell ? "Windows Credential Manager" : "this browser's storage"} couldn't be cleared.` }); }
   }
 
   return (
     <form className="stack" onSubmit={save}>
-      <p className="muted">Your key stays in this browser. Offerlane calls the AI service directly; our servers never see your key or your resume.</p>
+      <p className="muted">Your key stays {shell ? "on this PC" : "in this browser"}. Offerlane calls the AI service directly; our servers never see your key or your resume.</p>
       {saved && <p className="card">Connected: {NAME[saved.provider]} · {saved.smart} <button type="button" onClick={forget}>Forget key</button></p>}
       <fieldset>
         <legend>Service</legend>
@@ -86,7 +89,7 @@ export function ConnectAI() {
       </details>
       <label>{NAME[provider]} key <input type="password" autoComplete="off" spellCheck={false} value={key} onChange={(e) => setKey(e.target.value)} required /></label>
       <p className="muted"><a href={KEY_PAGE[provider]} target="_blank" rel="noreferrer noopener">Get a key (opens in a new tab)</a></p>
-      <label className="radio"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember on this device (stored encrypted in this browser)</label>
+      <label className="radio"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember on this device ({shell ? "stored in Windows Credential Manager" : "stored encrypted in this browser"})</label>
       <button type="submit" disabled={busy}>{busy ? "Testing…" : "Test and save"}</button>
       <p role={status && !status.ok ? "alert" : "status"} className={status ? (status.ok ? "ok" : "bad") : undefined}>{status?.text}</p>
     </form>

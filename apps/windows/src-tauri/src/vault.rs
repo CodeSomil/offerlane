@@ -31,6 +31,24 @@ pub fn save(host: &str, account: &Account) -> Result<(), String> {
 
 pub fn delete(host: &str) -> Result<(), String> { imp::delete(&target(host).ok_or("bad host")?) }
 
+/// Offerlane's own secrets under fixed names: "ai" is the remembered AI config (provider, key, models) as JSON.
+pub fn secret_target(name: &str) -> Option<String> { matches!(name, "ai").then(|| format!("Offerlane/secret/{name}")) }
+/// CRED_MAX_CREDENTIAL_BLOB_SIZE (5 * 512 bytes).
+const MAX_SECRET: usize = 2560;
+
+pub fn secret_save(name: &str, value: &str) -> Result<(), String> {
+    let t = secret_target(name).ok_or("unknown secret")?;
+    if value.len() > MAX_SECRET { return Err("too long for Credential Manager".into()); }
+    imp::write(&t, "offerlane", value.as_bytes())
+}
+
+pub fn secret_read(name: &str) -> Result<Option<String>, String> {
+    let t = secret_target(name).ok_or("unknown secret")?;
+    Ok(imp::read(&t)?.and_then(|b| String::from_utf8(b).ok()))
+}
+
+pub fn secret_delete(name: &str) -> Result<(), String> { imp::delete(&secret_target(name).ok_or("unknown secret")?) }
+
 #[cfg(windows)]
 mod imp {
     use windows::core::{HSTRING, PWSTR};
@@ -101,6 +119,14 @@ mod tests {
         for bad in ["", "a/b", "a b", "*", "x\u{0}y", "é.com", &"a".repeat(254)] { assert!(target(bad).is_none(), "{bad:?}"); }
     }
 
+    #[test]
+    fn secret_names() {
+        assert_eq!(secret_target("ai").as_deref(), Some("Offerlane/secret/ai"));
+        for bad in ["", "AI", "ai/x", "../apply/x", "other"] { assert!(secret_target(bad).is_none(), "{bad:?}"); }
+        assert!(secret_save("ai", &"x".repeat(MAX_SECRET + 1)).unwrap_err().contains("too long"));
+        assert!(secret_read("nope").is_err());
+    }
+
     // The real store: Windows only (CI's spike-windows job runs `cargo test`). A fixed host under .invalid never names a real site.
     #[cfg(windows)]
     #[test]
@@ -113,5 +139,17 @@ mod tests {
         assert_eq!(read(host).unwrap(), Some(a));
         delete(host).unwrap();
         assert_eq!(read(host).unwrap(), None);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn secret_round_trip() {
+        // The real "ai" entry belongs to the user: keep what is there and put it back.
+        let before = secret_read("ai").unwrap();
+        secret_save("ai", r#"{"provider":"openrouter","key":"sk-or-Ä"}"#).unwrap();
+        assert_eq!(secret_read("ai").unwrap().as_deref(), Some(r#"{"provider":"openrouter","key":"sk-or-Ä"}"#));
+        secret_delete("ai").unwrap();
+        assert_eq!(secret_read("ai").unwrap(), None);
+        if let Some(v) = before { secret_save("ai", &v).unwrap(); }
     }
 }

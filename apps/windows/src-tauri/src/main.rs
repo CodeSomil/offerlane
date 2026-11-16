@@ -72,6 +72,24 @@ fn console_for_selftest() {
 #[cfg(not(all(windows, not(debug_assertions))))]
 fn console_for_selftest() {}
 
+#[tauri::command]
+fn secret_read(webview: Webview, name: String) -> Result<Option<String>, String> {
+    apply::main_only(&webview)?;
+    vault::secret_read(&name)
+}
+
+#[tauri::command]
+fn secret_save(webview: Webview, name: String, value: String) -> Result<(), String> {
+    apply::main_only(&webview)?;
+    vault::secret_save(&name, &value)
+}
+
+#[tauri::command]
+fn secret_delete(webview: Webview, name: String) -> Result<(), String> {
+    apply::main_only(&webview)?;
+    vault::secret_delete(&name)
+}
+
 fn main() {
     let selftest = std::env::args().skip(1).any(|a| a == "--selftest");
     if selftest { console_for_selftest(); }
@@ -79,7 +97,7 @@ fn main() {
     tauri::Builder::default()
         .manage(SelfTest { base })
         .invoke_handler(tauri::generate_handler![
-            selftest_base, selftest_log, selftest_done, vault_read, vault_save, vault_delete,
+            selftest_base, selftest_log, selftest_done, vault_read, vault_save, vault_delete, secret_read, secret_save, secret_delete,
             apply::open_page, apply::close_page, apply::cdp_send
         ])
         .setup(move |app| {

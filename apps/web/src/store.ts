@@ -1,5 +1,6 @@
 // IndexedDB key/value store for the web app (P3.4, H3). Everything stays on this device.
 import type { AIConfig } from "@offerlane/core";
+import { platform } from "./platform.js";
 
 const req = <T>(r: IDBRequest<T>) => new Promise<T>((ok, fail) => { r.onsuccess = () => ok(r.result); r.onerror = () => fail(r.error); });
 let db: Promise<IDBDatabase> | undefined;
@@ -37,6 +38,7 @@ export async function updateItem<T>(k: string, f: (old: unknown) => T): Promise<
 /** "Remember on this device": the AI config is AES-GCM encrypted under a non-extractable WebCrypto key kept beside it,
  *  so a copy of the stored bytes alone is useless and page script can use the key but never read it out. */
 export async function rememberAI(c: AIConfig) {
+  if (platform.secrets) return platform.secrets.save(c);  // the Windows shell: Credential Manager
   let wrap = (await getItem("ai-wrap")) as CryptoKey | undefined;
   if (!wrap) { wrap = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]); await setItem("ai-wrap", wrap); }
   const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -45,6 +47,7 @@ export async function rememberAI(c: AIConfig) {
 }
 
 export async function loadAI(): Promise<AIConfig | undefined> {
+  if (platform.secrets) return platform.secrets.load();
   const wrap = (await getItem("ai-wrap")) as CryptoKey | undefined;
   const box = (await getItem("ai")) as { iv: Uint8Array<ArrayBuffer>; ct: Uint8Array<ArrayBuffer> } | undefined;
   if (!wrap || !box) return undefined;
@@ -56,4 +59,4 @@ export async function loadAI(): Promise<AIConfig | undefined> {
   }
 }
 
-export async function forgetAI() { await delItem("ai"); await delItem("ai-wrap"); }
+export async function forgetAI() { await platform.secrets?.forget(); await delItem("ai"); await delItem("ai-wrap"); }
