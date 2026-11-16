@@ -30,9 +30,13 @@ patterns=("$HOME" "/Users/$user/" "/Users/$user\"" "/home/$user")
 secrets='sk-ant-[A-Za-z0-9_-]{20,}|ya29\.[0-9A-Za-z_-]{20,}|1//0[0-9A-Za-z_-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|GOCSPX-[A-Za-z0-9_-]{20,}'
 while IFS= read -r -d '' f; do
   case "$f" in */_CodeSignature/*|*/TectonicCache/*) continue ;; esac
-  for p in "${patterns[@]}"; do
-    if LC_ALL=C grep -aqF "$p" "$f"; then report "'$p' found in ${f#$TARGET/}"; fi
-  done
+  # Helpers/tectonic is upstream's binary, pinned by SHA-256 in scripts/fetch-tectonic.sh. It carries its own builder's
+  # "/Users/runner/..." paths, which match this Mac's home only on a CI runner (user "runner"). It still gets the secret scan.
+  if [[ "$f" != */Contents/Helpers/tectonic ]]; then
+    for p in "${patterns[@]}"; do
+      if LC_ALL=C grep -aqF "$p" "$f"; then report "'$p' found in ${f#$TARGET/}"; fi
+    done
+  fi
   # OAuthConfig.plist holds the Google *Desktop* client secret, which Google treats as public (docs/GOOGLE_SETUP.md).
   if [[ "$f" == */OAuthConfig.plist ]]; then file_secrets="${secrets//|GOCSPX-\[A-Za-z0-9_-\]\{20,\}/}"; else file_secrets="$secrets"; fi
   if LC_ALL=C grep -aqE "$file_secrets" "$f"; then report "secret-like string in ${f#$TARGET/}"; fi
